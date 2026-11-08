@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-         IgnorableNamespaces="uap">
+         xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+         IgnorableNamespaces="uap mp">
   <Identity Name="RetroPlayerXbox" Publisher="CN=RetroPlayerXbox" Version="0.1.0.0" />
+  <mp:PhoneIdentity
+    PhoneProductId="7b1f4d2a-9c63-4e85-a710-2f6b8d3c5e91"
+    PhonePublisherId="a2e8c641-5f79-4b30-8d16-c9a47e2b6035" />
   <Properties>
     <DisplayName>Retro Player Xbox</DisplayName>
     <PublisherDisplayName>Retro Player</PublisherDisplayName>

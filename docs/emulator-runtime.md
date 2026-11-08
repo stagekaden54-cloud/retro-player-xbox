@@ -1,0 +1,33 @@
+# Emulator runtime integration plan
+
+## First real runtime handoff
+
+The native Xbox shell loads the Retro Player Xbox library from the Vercel project. The library's **Open Retro Player** action navigates the same WebView2 instance to the existing EmulatorJS-based player:
+
+- Library UI: https://retro-player-xbox.vercel.app/
+- Existing emulator website: https://ps1-player.vercel.app/
+
+The Xbox host allowlists both HTTPS origins. The native controller bridge forwards D-pad, A, and B input to the web page. B returns to the library when the emulator website is open and the browser history contains the library page.
+
+This is an initial runtime handoff, not per-title launch integration. The demo catalog entries are metadata only and do not point to ROM files.
+
+## What must be validated on a Series S
+
+1. The Xbox WebView2 runtime can load both sites.
+2. EmulatorJS initializes without browser API errors.
+3. WebAssembly and WebGL are available to the player.
+4. Audio output works after the user starts a game.
+5. The native controller bridge and the emulator's own controller mapping do not conflict.
+6. User-selected game files can be read by the player in the Xbox WebView2 environment.
+7. Memory use and frame pacing remain stable during longer sessions.
+
+## Next integration step
+
+After those checks pass, replace the generic handoff with a real launch contract:
+
+- game metadata stores the emulator system/core identifier;
+- the user chooses a local game file through a supported Xbox file picker;
+- the host passes a scoped file handle or supported stream to the player;
+- the player starts the selected EmulatorJS core and reports ready/error state to the library.
+
+Do not bundle copyrighted ROMs or BIOS files. Keep user-provided game content outside the source repository.

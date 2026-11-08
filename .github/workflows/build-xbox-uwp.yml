@@ -20,6 +20,15 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install UWP build workload
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vswhere -latest -products * -property installationPath
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
+          & $installer modify --installPath "$vsPath" --add Microsoft.VisualStudio.Workload.Universal --includeRecommended --quiet --norestart --wait
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
 

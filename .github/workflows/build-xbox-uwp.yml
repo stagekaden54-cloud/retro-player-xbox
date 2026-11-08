@@ -1,6 +1,11 @@
 name: Build Xbox UWP package
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "XboxShell/**"
+      - ".github/workflows/build-xbox-uwp.yml"
   push:
     branches: [xbox-native-shell]
     paths:

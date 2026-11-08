@@ -4,7 +4,7 @@ A controller-first Xbox Developer Mode client for Retro Player.
 
 ## Project status
 
-**Stage:** Interactive library prototype (0.2.0)
+**Stage:** Native Xbox UWP shell scaffold + EmulatorJS web handoff (0.3.0)
 
 This repository is separate from the existing Retro Player website. The first target is Xbox Series X|S in Developer Mode.
 
@@ -30,16 +30,20 @@ This repository is separate from the existing Retro Player website. The first ta
 - Sample catalog with search and Nintendo 64 / PlayStation / Game Boy Advance filters.
 - Game detail dialog and locally saved favorites.
 - Keyboard and browser Gamepad API focus navigation.
-- Launch action is intentionally a preview message; no emulator is connected.
+- The native shell hosts the Xbox library in WebView2 and forwards D-pad / A / B from the UWP Gamepad API.
+- The library can hand off to the existing EmulatorJS-based Retro Player website. The handoff is not yet a per-game ROM launch.
 
 All displayed game entries are sample metadata, not installed content. No ROMs, BIOS files, or copyrighted artwork are included.
 
+## Native Xbox shell
+
+The `XboxShell/` folder contains a UWP + WinUI 2 WebView2 host and a GitHub Actions workflow for building a Developer Mode package. See [XboxShell/README.md](XboxShell/README.md) and [docs/emulator-runtime.md](docs/emulator-runtime.md).
+
 ## Next development sequence
 
-1. Test focus navigation and rendering on Xbox hardware.
-2. Establish the Xbox app shell and package configuration.
-3. Evaluate the supported WebView/emulator path on the console.
-4. Add safe user-selected file access after platform compatibility is proven.
-5. Integrate emulator launch and controller mapping only after compatibility is demonstrated.
+1. Complete a successful Windows CI build of the signed x64 UWP package.
+2. Install and test the shell on a real Xbox Series S in Developer Mode.
+3. Validate the existing EmulatorJS site inside Xbox WebView2.
+4. Add per-game core mapping and user-selected file access after the runtime checks pass.
 
 See [docs/architecture.md](docs/architecture.md) for the initial design.

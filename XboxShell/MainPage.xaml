@@ -5,8 +5,7 @@
     Background="#07110E">
   <Grid Background="#07110E">
     <controls:WebView2 x:Name="PlayerWebView"
-      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-      DefaultBackgroundColor="#07110E" />
+      HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
     <Grid x:Name="StartupOverlay" Background="#07110E" Visibility="Visible">
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
         <TextBlock Text="RETRO PLAYER" Foreground="#9BF56B" FontSize="30"

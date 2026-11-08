@@ -11,7 +11,7 @@
       <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
         <TextBlock Text="RETRO PLAYER" Foreground="#9BF56B" FontSize="30"
           FontWeight="Bold" HorizontalAlignment="Center" />
-        <TextBlock Text="Starting Xbox interface…" Foreground="#A8B9AF"
+        <TextBlock x:Name="StartupStatus" Text="Starting Xbox interface…" Foreground="#A8B9AF"
           FontSize="16" HorizontalAlignment="Center" />
       </StackPanel>
     </Grid>

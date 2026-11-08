@@ -47,7 +47,7 @@ namespace RetroPlayerXbox
             catch (Exception ex)
             {
                 StartupOverlay.Visibility = Visibility.Visible;
-                await ShowStartupErrorAsync(ex.Message);
+                StartupStatus.Text = "Could not initialize the Xbox web runtime: " + ex.Message;
             }
         }
 
@@ -108,17 +108,8 @@ namespace RetroPlayerXbox
                 return;
 
             await PlayerWebView.CoreWebView2.ExecuteScriptAsync(
-                "if (window.RetroPlayerNativeInput) window.RetroPlayerNativeInput('" + action + "');");
+                "(() => { const a = '" + action + "'; if (window.RetroPlayerNativeInput) { window.RetroPlayerNativeInput(a); return; } if (a === 'A') { document.activeElement?.click(); return; } if (a === 'B') { if (history.length > 1) history.back(); else document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})); return; } document.dispatchEvent(new KeyboardEvent('keydown',{key:a,bubbles:true,cancelable:true})); })();");
         }
 
-        private async Task ShowStartupErrorAsync(string message)
-        {
-            if (PlayerWebView.CoreWebView2 != null)
-            {
-                string safe = message.Replace("\\", "\\\\").Replace("'", "\\'");
-                await PlayerWebView.CoreWebView2.ExecuteScriptAsync(
-                    "document.body.innerText = 'Retro Player could not start: " + safe + "';");
-            }
-        }
     }
 }

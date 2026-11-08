@@ -7,7 +7,7 @@ on:
       - "XboxShell/**"
       - ".github/workflows/build-xbox-uwp.yml"
   push:
-    branches: [xbox-native-shell]
+    branches: [main, xbox-native-shell]
     paths:
       - "XboxShell/**"
       - ".github/workflows/build-xbox-uwp.yml"

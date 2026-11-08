@@ -4,20 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07110e">
+  <meta name="description" content="Retro Player Xbox — a controller-first retro game library concept.">
   <title>Retro Player Xbox</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="Retro Player home">
-        <span class="brand-mark">RP</span>
-        <span>RETRO <b>PLAYER</b></span>
-        <small> XBOX</small>
-      </a>
+      <a class="brand" href="#" aria-label="Retro Player home"><span class="brand-mark">RP</span><span>RETRO <b>PLAYER</b></span><small> XBOX</small></a>
       <div class="top-meta"><span class="live-dot"></span><span>DEVELOPER MODE CONCEPT</span><span class="profile">K</span></div>
     </header>
-
     <main>
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
@@ -26,40 +22,55 @@
           <p class="hero-sub">A controller-first home for your retro game collection.</p>
           <button class="primary-btn focusable" data-action="library">Explore library <span>→</span></button>
         </div>
-        <div class="hero-art" aria-hidden="true">
-          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-          <div class="disc"><div class="disc-hole"></div><span>RETRO<br>PLAYER</span></div>
-          <div class="pixel p1"></div><div class="pixel p2"></div><div class="pixel p3"></div>
-        </div>
+        <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="disc"><div class="disc-hole"></div><span>RETRO<br>PLAYER</span></div><div class="pixel p1"></div><div class="pixel p2"></div><div class="pixel p3"></div></div>
         <div class="hero-foot"><span>BUILT FOR THE BIG SCREEN</span><span>01 / HOME</span></div>
       </section>
 
       <section class="section" id="library">
-        <div class="section-heading"><div><p class="eyebrow">PICK UP WHERE YOU LEFT OFF</p><h2>Your library</h2></div><span class="section-note">USER-PROVIDED GAMES</span></div>
-        <div class="empty-library panel">
-          <div class="empty-icon">＋</div>
-          <div><h3>Your collection starts here</h3><p>Game importing will be added after we confirm Xbox file access and emulator compatibility.</p></div>
-          <span class="coming-soon">LIBRARY SETUP · PLANNED</span>
+        <div class="section-heading">
+          <div><p class="eyebrow">PICK YOUR NEXT ADVENTURE</p><h2>Your library</h2><p class="section-description">Browse the sample catalog. These entries are demonstrations, not installed games.</p></div>
+          <span class="section-note" id="result-count">6 SAMPLE ENTRIES</span>
         </div>
+        <div class="library-tools">
+          <label class="search-wrap"><span aria-hidden="true">⌕</span><input id="game-search" type="search" placeholder="Search games or systems…" autocomplete="off" aria-label="Search games or systems"></label>
+          <div class="filters" role="group" aria-label="Filter by console">
+            <button class="filter-btn active focusable" data-filter="All" aria-pressed="true">All</button>
+            <button class="filter-btn focusable" data-filter="Nintendo 64" aria-pressed="false">N64</button>
+            <button class="filter-btn focusable" data-filter="PlayStation" aria-pressed="false">PS1</button>
+            <button class="filter-btn focusable" data-filter="Game Boy Advance" aria-pressed="false">GBA</button>
+          </div>
+        </div>
+        <div class="game-grid" id="game-grid" aria-live="polite"></div>
+        <div class="no-results panel" id="no-results" hidden><strong>No matching games</strong><p>Try another title or choose a different system.</p></div>
       </section>
 
       <section class="section systems">
         <div class="section-heading"><div><p class="eyebrow">ONE HOME FOR MANY ERAS</p><h2>Browse systems</h2></div><span class="section-note">CORE INTEGRATION NOT YET CONNECTED</span></div>
         <div class="system-grid">
-          <button class="system-card focusable" data-system="Nintendo 64"><span class="system-symbol">N64</span><strong>Nintendo 64</strong><small>CORE PLANNED</small></button>
-          <button class="system-card focusable" data-system="PlayStation"><span class="system-symbol ps">PS</span><strong>PlayStation</strong><small>CORE PLANNED</small></button>
-          <button class="system-card focusable" data-system="Game Boy"><span class="system-symbol gb">GB</span><strong>Game Boy</strong><small>CORE PLANNED</small></button>
-          <button class="system-card focusable" data-system="More systems"><span class="system-symbol more">···</span><strong>More systems</strong><small>COMING LATER</small></button>
+          <button class="system-card focusable" data-system-filter="Nintendo 64"><span class="system-symbol">N64</span><strong>Nintendo 64</strong><small>CORE PLANNED</small></button>
+          <button class="system-card focusable" data-system-filter="PlayStation"><span class="system-symbol ps">PS</span><strong>PlayStation</strong><small>CORE PLANNED</small></button>
+          <button class="system-card focusable" data-system-filter="Game Boy Advance"><span class="system-symbol gb">GBA</span><strong>Game Boy Advance</strong><small>CORE PLANNED</small></button>
+          <button class="system-card focusable" data-system-filter="All"><span class="system-symbol more">···</span><strong>All systems</strong><small>VIEW LIBRARY</small></button>
         </div>
       </section>
 
       <section class="status-panel panel">
-        <div><p class="eyebrow">PROJECT STATUS</p><h2>Building the Xbox experience.</h2><p>This is the first interactive interface prototype. It is not yet an installable Xbox package, and no emulator is connected.</p></div>
+        <div><p class="eyebrow">PROJECT STATUS</p><h2>Building the Xbox experience.</h2><p>This is an interactive interface prototype. It is not yet an installable Xbox package, and no emulator core or game-file importer is connected.</p></div>
         <div class="status-tag"><span class="live-dot"></span> INTERFACE PROTOTYPE</div>
       </section>
     </main>
-    <footer><span>RETRO PLAYER XBOX</span><span>DESIGNED FOR CONTROLLER · SERIES S FIRST</span><span>BUILD 0.1.0</span></footer>
+    <footer><span>RETRO PLAYER XBOX</span><span>DESIGNED FOR CONTROLLER · SERIES S FIRST</span><span>BUILD 0.2.0</span></footer>
   </div>
+
+  <dialog class="game-dialog" id="game-dialog" aria-labelledby="dialog-title">
+    <button class="dialog-close focusable" id="dialog-close" aria-label="Close details">×</button>
+    <p class="eyebrow" id="dialog-system">SYSTEM</p>
+    <h2 id="dialog-title">Game title</h2>
+    <p id="dialog-description"></p>
+    <div class="dialog-meta" id="dialog-meta"></div>
+    <div class="dialog-actions"><button class="primary-btn focusable" id="launch-game">Launch game <span>→</span></button><button class="secondary-btn focusable" id="favorite-game">☆ Add to favorites</button></div>
+    <p class="dialog-note">Launch is a preview only. Emulator and file-import support are not connected yet.</p>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
 </body>

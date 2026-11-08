@@ -78,5 +78,16 @@
   window.addEventListener('gamepaddisconnected',()=>notify('Controller disconnected.'));
   if('getGamepads'in navigator)requestAnimationFrame(poll);
   document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)&&!['INPUT'].includes(document.activeElement?.tagName)){e.preventDefault();moveFocus(e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0,e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0)}});
+  // Native Xbox shell bridge. The UWP host forwards physical controller input here.
+  window.RetroPlayerNativeInput = function(action){
+    if(action === 'A'){ document.activeElement?.click(); return; }
+    if(action === 'B'){
+      if(dialog.open) dialog.close();
+      else if(document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+      return;
+    }
+    const key = ({ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight'})[action];
+    if(key) document.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));
+  };
   render();
 })();

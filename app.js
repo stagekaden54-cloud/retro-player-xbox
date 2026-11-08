@@ -43,7 +43,10 @@
   document.querySelector('[data-action="library"]').addEventListener('click',()=>document.getElementById('library').scrollIntoView({behavior:'smooth'}));
   search.addEventListener('input',render);
   document.getElementById('dialog-close').addEventListener('click',()=>dialog.close());
-  document.getElementById('launch-game').addEventListener('click',()=>notify('Launch preview only — emulator integration is not connected yet.'));
+  document.getElementById('launch-game').addEventListener('click',()=>{
+    notify('Opening your existing Retro Player web emulator…');
+    window.location.href='https://ps1-player.vercel.app/';
+  });
   document.getElementById('favorite-game').addEventListener('click',()=>{
     if(!selectedGame)return;
     if(favorites.has(selectedGame.id))favorites.delete(selectedGame.id);else favorites.add(selectedGame.id);
@@ -83,6 +86,7 @@
     if(action === 'A'){ document.activeElement?.click(); return; }
     if(action === 'B'){
       if(dialog.open) dialog.close();
+      else if(location.hostname === 'ps1-player.vercel.app' && history.length > 1) history.back();
       else if(document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
       return;
     }

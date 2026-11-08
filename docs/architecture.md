@@ -1,52 +1,55 @@
-# Initial architecture
+# Retro Player Xbox architecture
 
 ## Target
 
-Xbox Series S first, with Xbox Series X compatibility considered alongside it. Xbox One compatibility is not assumed; it will be evaluated separately.
+Xbox Series S first, then Series X. Xbox One compatibility is a separate validation target.
 
-## Layers
+## Native app shell
 
-### 1. Xbox application shell
+The first native host is a UWP app targeting the Windows.Xbox device family. It uses WinUI 2 and the Microsoft WebView2 control. Microsoft documents WebView2 for Xbox and provides a UWP WebView2 getting-started path.
 
-A native Xbox-compatible application owns startup, navigation, focus, settings, and controller input. It must be packaged and signed for Developer Mode deployment.
+The shell:
+- loads the Retro Player Xbox web library from the separately deployed Vercel project;
+- restricts top-level navigation to the Xbox UI site and the existing Retro Player site;
+- polls the native UWP Gamepad API and forwards D-pad, A, and B to the current web page;
+- keeps web UI and emulator runtime code separate from the native host.
 
-### 2. Retro Player presentation
+## Web library and emulator runtime
 
-The existing website at https://ps1-player.vercel.app/ is a separate web product. Reuse of its UI or emulator loader is conditional on the Xbox runtime supporting the required browser APIs, graphics features, audio behavior, and input APIs.
+- Library UI: https://retro-player-xbox.vercel.app/
+- Existing EmulatorJS player: https://ps1-player.vercel.app/
 
-### 3. Game library
+The library's initial launch action hands off to the existing EmulatorJS-based player in the same WebView2 control. This is not yet a per-game launch integration: sample catalog entries are metadata only and do not contain ROM files or direct file references.
 
-The library stores user-managed entries and metadata. It should not bundle ROMs, firmware, BIOS images, or copyrighted artwork.
+## Controller
 
-### 4. Emulator integration
+- D-pad: move focus.
+- A: activate focused item.
+- B: close a dialog or return from the emulator website to the library.
+- The native shell forwards controller input even when the existing player website is open.
 
-Keep emulator launch behind an interface so we can evaluate:
-- an embedded web runtime, if its APIs and performance are sufficient;
-- a native emulator core or separately packaged emulator, where supported and legally distributable.
+## Emulator integration boundary
 
-Do not assume an emulator can be launched from the app merely because a web version runs on a PC.
+Keep emulator launch behind an adapter. The first real runtime handoff uses the existing EmulatorJS-based site. The next phase must add:
+- a real system/core mapping per library entry;
+- user-selected game file access that works in the Xbox sandbox;
+- a safe host-to-web file/launch contract;
+- runtime ready/error reporting.
 
-## Controller-first interaction
-
-- D-pad and left stick: move focus.
-- A: activate the focused control.
-- B: go back or close a dialog.
-- Menu: open the application menu.
-- Every screen must expose a visible focus indicator.
-- No essential action may require a mouse or touchscreen.
+Do not assume a file picker or emulator core works on Xbox until tested on the actual Series S.
 
 ## Compatibility gates
 
-Before choosing the emulator architecture, test on actual Xbox Series S hardware:
-1. App installation and launch in Developer Mode.
-2. Controller input and focus navigation.
-3. WebView graphics support, including WebGL requirements if using EmulatorJS.
-4. Audio output and lifecycle behavior.
-5. Memory use and sustained performance.
+1. UWP package installs and launches in Developer Mode.
+2. WebView2 loads both sites.
+3. WebAssembly and WebGL work in the player.
+4. Audio and controller input work.
+5. User-selected game files can be read without broad file-system access.
+6. Memory and sustained frame pacing remain acceptable.
 
 ## Security and distribution
 
-- Never commit signing keys, certificates, tokens, ROMs, or BIOS files.
-- Treat imported filenames and metadata as untrusted input.
-- Keep any future file access scoped to user-selected locations.
-- This is an independent community project and is not affiliated with Microsoft.
+- Never commit signing keys, private certificates, tokens, ROMs, or BIOS files.
+- The CI workflow generates a temporary development signing certificate for the package; only the public certificate is included in the artifact.
+- Treat imported filenames and metadata as untrusted.
+- This is an independent project and is not affiliated with Microsoft.

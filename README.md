@@ -4,7 +4,7 @@ A controller-first Xbox Developer Mode client for Retro Player.
 
 ## Project status
 
-**Stage:** Foundation / architecture
+**Stage:** Interactive library prototype (0.2.0)
 
 This repository is separate from the existing Retro Player website. The first target is Xbox Series X|S in Developer Mode.
 
@@ -24,12 +24,22 @@ This repository is separate from the existing Retro Player website. The first ta
 - The project will not include game ROMs or copyrighted game assets. Users must provide content they are authorized to use.
 - Never commit signing certificates, passwords, tokens, ROMs, BIOS files, or other private material.
 
-## Initial development sequence
+## Current prototype features
 
-1. Establish the Xbox app shell and package configuration.
-2. Implement gamepad-first navigation and focus behavior.
-3. Add the library view and local metadata model.
-4. Evaluate the supported WebView/emulator path on real Xbox hardware.
+- Responsive, TV-friendly home screen.
+- Sample catalog with search and Nintendo 64 / PlayStation / Game Boy Advance filters.
+- Game detail dialog and locally saved favorites.
+- Keyboard and browser Gamepad API focus navigation.
+- Launch action is intentionally a preview message; no emulator is connected.
+
+All displayed game entries are sample metadata, not installed content. No ROMs, BIOS files, or copyrighted artwork are included.
+
+## Next development sequence
+
+1. Test focus navigation and rendering on Xbox hardware.
+2. Establish the Xbox app shell and package configuration.
+3. Evaluate the supported WebView/emulator path on the console.
+4. Add safe user-selected file access after platform compatibility is proven.
 5. Integrate emulator launch and controller mapping only after compatibility is demonstrated.
 
 See [docs/architecture.md](docs/architecture.md) for the initial design.

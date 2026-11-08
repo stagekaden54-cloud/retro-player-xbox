@@ -12,7 +12,7 @@ This folder contains the first native Xbox application host for Retro Player.
 
 ## Build
 
-Open `RetroPlayerXbox.sln` in Visual Studio 2022 with the Universal Windows Platform development workload and Windows 10 SDK installed. Restore NuGet packages, select `Release | x64`, and build the project.
+Open `RetroPlayerXbox.sln` in Visual Studio 2022 with the Universal Windows Platform development workload and Windows 10 SDK installed. First run `./GenerateAssets.ps1` in PowerShell to materialize the PNG package logos from the checked-in base64 source files. Restore NuGet packages, select `Release | x64`, and build the project.
 
 The GitHub Actions workflow builds a signed sideload package and publishes the package plus its public development certificate as workflow artifacts.
 

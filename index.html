@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07110e">
-  <meta name="description" content="Retro Player Xbox — a controller-first retro game library concept.">
+  <meta name="description" content="Retro Player Xbox — a controller-first retro game library.">
   <title>Retro Player Xbox</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="app-shell">
+  <div class="app-shell" id="home-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Retro Player home"><span class="brand-mark">RP</span><span>RETRO <b>PLAYER</b></span><small> XBOX</small></a>
-      <div class="top-meta"><span class="live-dot"></span><span>DEVELOPER MODE CONCEPT</span><span class="profile">K</span></div>
+      <div class="top-meta"><span class="live-dot"></span><span>DEVELOPER MODE</span><span class="profile">K</span></div>
     </header>
     <main>
       <section class="hero" aria-labelledby="hero-title">
@@ -26,9 +26,20 @@
         <div class="hero-foot"><span>BUILT FOR THE BIG SCREEN</span><span>01 / HOME</span></div>
       </section>
 
+      <section class="section" id="my-library">
+        <div class="section-heading">
+          <div><p class="eyebrow">YOUR PERSONAL COLLECTION</p><h2>My games</h2><p class="section-description">Import a PlayStation game image. Your library is saved on this device.</p></div>
+          <button class="primary-btn focusable" id="import-game">＋ Import game</button>
+          <input id="game-file-input" type="file" accept=".bin,.iso,.img,.pbp,.chd" hidden>
+        </div>
+        <p class="import-help">Supported file types: BIN, ISO, IMG, PBP and CHD. Multi-file CUE/BIN discs aren't supported in this first version. Only import game files you're authorized to use.</p>
+        <div class="personal-game-grid" id="personal-game-grid" aria-live="polite"></div>
+        <div class="empty-library panel" id="empty-library"><strong>Your library is empty</strong><p>Choose Import game to add a compatible PlayStation game image.</p></div>
+      </section>
+
       <section class="section" id="library">
         <div class="section-heading">
-          <div><p class="eyebrow">PICK YOUR NEXT ADVENTURE</p><h2>Your library</h2><p class="section-description">Browse the sample catalog. These entries are demonstrations, not installed games.</p></div>
+          <div><p class="eyebrow">DISCOVER THE CLASSICS</p><h2>Sample catalog</h2><p class="section-description">These are example entries, not installed game files.</p></div>
           <span class="section-note" id="result-count">6 SAMPLE ENTRIES</span>
         </div>
         <div class="library-tools">
@@ -45,22 +56,32 @@
       </section>
 
       <section class="section systems">
-        <div class="section-heading"><div><p class="eyebrow">ONE HOME FOR MANY ERAS</p><h2>Browse systems</h2></div><span class="section-note">CORE INTEGRATION NOT YET CONNECTED</span></div>
+        <div class="section-heading"><div><p class="eyebrow">ONE HOME FOR MANY ERAS</p><h2>Browse systems</h2></div><span class="section-note">PS1 CORE FIRST</span></div>
         <div class="system-grid">
-          <button class="system-card focusable" data-system-filter="Nintendo 64"><span class="system-symbol">N64</span><strong>Nintendo 64</strong><small>CORE PLANNED</small></button>
-          <button class="system-card focusable" data-system-filter="PlayStation"><span class="system-symbol ps">PS</span><strong>PlayStation</strong><small>CORE PLANNED</small></button>
-          <button class="system-card focusable" data-system-filter="Game Boy Advance"><span class="system-symbol gb">GBA</span><strong>Game Boy Advance</strong><small>CORE PLANNED</small></button>
-          <button class="system-card focusable" data-system-filter="All"><span class="system-symbol more">···</span><strong>All systems</strong><small>VIEW LIBRARY</small></button>
+          <button class="system-card focusable" data-system-filter="Nintendo 64"><span class="system-symbol">N64</span><strong>Nintendo 64</strong><small>PLANNED</small></button>
+          <button class="system-card focusable" data-system-filter="PlayStation"><span class="system-symbol ps">PS</span><strong>PlayStation</strong><small>AVAILABLE FIRST</small></button>
+          <button class="system-card focusable" data-system-filter="Game Boy Advance"><span class="system-symbol gb">GBA</span><strong>Game Boy Advance</strong><small>PLANNED</small></button>
+          <button class="system-card focusable" data-system-filter="All"><span class="system-symbol more">···</span><strong>All systems</strong><small>VIEW CATALOG</small></button>
         </div>
       </section>
 
       <section class="status-panel panel">
-        <div><p class="eyebrow">PROJECT STATUS</p><h2>Building the Xbox experience.</h2><p>This is an interactive interface prototype. It is not yet an installable Xbox package, and no emulator core or game-file importer is connected.</p></div>
-        <div class="status-tag"><span class="live-dot"></span> INTERFACE PROTOTYPE</div>
+        <div><p class="eyebrow">PROJECT STATUS</p><h2>PS1 game importing is here.</h2><p>Import and library storage are implemented for supported single-file PlayStation disc images. Actual Xbox hardware testing is still needed.</p></div>
+        <div class="status-tag"><span class="live-dot"></span> PS1 FIRST</div>
       </section>
     </main>
-    <footer><span>RETRO PLAYER XBOX</span><span>DESIGNED FOR CONTROLLER · SERIES S FIRST</span><span>BUILD 0.2.0</span></footer>
+    <footer><span>RETRO PLAYER XBOX</span><span>DESIGNED FOR CONTROLLER · SERIES S FIRST</span><span>BUILD 0.3.0</span></footer>
   </div>
+
+  <section class="emulator-panel" id="emulator-panel" hidden>
+    <header class="emulator-topbar">
+      <button class="secondary-btn focusable" id="exit-emulator">← Back to library</button>
+      <div><span class="live-dot"></span> PLAYSTATION</div>
+      <span class="emulator-game-title" id="emulator-game-title">Loading game…</span>
+    </header>
+    <div class="emulator-screen" id="emulator-screen"></div>
+    <p class="emulator-help" id="emulator-status">Starting emulator…</p>
+  </section>
 
   <dialog class="game-dialog" id="game-dialog" aria-labelledby="dialog-title">
     <button class="dialog-close focusable" id="dialog-close" aria-label="Close details">×</button>
@@ -68,8 +89,8 @@
     <h2 id="dialog-title">Game title</h2>
     <p id="dialog-description"></p>
     <div class="dialog-meta" id="dialog-meta"></div>
-    <div class="dialog-actions"><button class="primary-btn focusable" id="launch-game">Open Retro Player <span>→</span></button><button class="secondary-btn focusable" id="favorite-game">☆ Add to favorites</button></div>
-    <p class="dialog-note">This sample entry is not linked to a specific game file yet. Open your existing Retro Player to browse and load a game.</p>
+    <div class="dialog-actions"><button class="primary-btn focusable" id="launch-game">Import a game <span>→</span></button><button class="secondary-btn focusable" id="favorite-game">☆ Add to favorites</button></div>
+    <p class="dialog-note">This is a sample catalog entry, not a game file. Import your own compatible game image to play it.</p>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>

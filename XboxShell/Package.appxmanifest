@@ -6,7 +6,7 @@
   <Identity Name="RetroPlayerXbox" Publisher="CN=RetroPlayerXbox" Version="0.1.0.0" />
   <mp:PhoneIdentity
     PhoneProductId="7b1f4d2a-9c63-4e85-a710-2f6b8d3c5e91"
-    PhonePublisherId="a2e8c641-5f79-4b30-8d16-c9a47e2b6035" />
+    PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Retro Player Xbox</DisplayName>
     <PublisherDisplayName>Retro Player</PublisherDisplayName>

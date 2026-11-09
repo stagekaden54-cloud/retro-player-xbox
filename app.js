@@ -7,17 +7,155 @@
     {id:"spyro",title:"Spyro the Dragon",system:"PlayStation",year:"1998",genre:"Platformer",tag:"PS1",mark:"SPYRO",colors:["#7653a5","#292b53"],description:"A bright 3D adventure centered on exploring worlds and collecting treasure."},
     {id:"metroid",title:"Metroid Fusion",system:"Game Boy Advance",year:"2002",genre:"Action",tag:"GBA",mark:"FUSION",colors:["#397e8d","#152d48"],description:"A sci-fi action adventure designed for the Game Boy Advance."}
   ];
-  const toast = document.getElementById('toast'), grid = document.getElementById('game-grid'), search = document.getElementById('game-search');
+  const toast = document.getElementById('toast');
+  const grid = document.getElementById('game-grid');
+  const search = document.getElementById('game-search');
   const dialog = document.getElementById('game-dialog');
-  let toastTimer, activeFilter='All', selectedGame=null;
+  const fileInput = document.getElementById('game-file-input');
+  const personalGrid = document.getElementById('personal-game-grid');
+  const emptyLibrary = document.getElementById('empty-library');
+  const homeShell = document.getElementById('home-shell');
+  const emulatorPanel = document.getElementById('emulator-panel');
+  const emulatorScreen = document.getElementById('emulator-screen');
+  let toastTimer, activeFilter='All', selectedGame=null, database=null;
   const favorites = new Set(JSON.parse(localStorage.getItem('rp-xbox-favorites') || '[]'));
-  function notify(message){toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2500)}
+
+  function notify(message){
+    toast.textContent=message;toast.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3000);
+  }
+  function openDatabase(){
+    return new Promise((resolve,reject)=>{
+      if(!('indexedDB' in window)){reject(new Error('This browser does not support local game storage.'));return}
+      const request=indexedDB.open('RetroPlayerXboxLibrary',1);
+      request.onupgradeneeded=()=>{
+        const db=request.result;
+        if(!db.objectStoreNames.contains('games'))db.createObjectStore('games',{keyPath:'id'});
+      };
+      request.onsuccess=()=>resolve(request.result);
+      request.onerror=()=>reject(request.error||new Error('Could not open game library storage.'));
+    });
+  }
+  function storeGame(record){
+    return new Promise((resolve,reject)=>{
+      const tx=database.transaction('games','readwrite');
+      tx.objectStore('games').put(record);
+      tx.oncomplete=()=>resolve();
+      tx.onerror=()=>reject(tx.error||new Error('Could not save this game.'));
+      tx.onabort=()=>reject(tx.error||new Error('Game save was cancelled.'));
+    });
+  }
+  function readGames(){
+    return new Promise((resolve,reject)=>{
+      const request=database.transaction('games','readonly').objectStore('games').getAll();
+      request.onsuccess=()=>resolve(request.result||[]);
+      request.onerror=()=>reject(request.error||new Error('Could not read your library.'));
+    });
+  }
+  function readGame(id){
+    return new Promise((resolve,reject)=>{
+      const request=database.transaction('games','readonly').objectStore('games').get(id);
+      request.onsuccess=()=>resolve(request.result||null);
+      request.onerror=()=>reject(request.error||new Error('Could not open this game.'));
+    });
+  }
+  function removeGame(id){
+    return new Promise((resolve,reject)=>{
+      const tx=database.transaction('games','readwrite');
+      tx.objectStore('games').delete(id);
+      tx.oncomplete=resolve;
+      tx.onerror=()=>reject(tx.error||new Error('Could not remove this game.'));
+    });
+  }
+  function formatSize(bytes){
+    if(bytes<1024*1024)return (bytes/1024).toFixed(0)+' KB';
+    return (bytes/(1024*1024)).toFixed(1)+' MB';
+  }
+  function safeId(){
+    return window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+  }
+  async function renderPersonalLibrary(){
+    if(!database)return;
+    try{
+      const entries=await readGames();
+      personalGrid.innerHTML=entries.map(entry=>`<article class="personal-game-card">
+        <div class="personal-game-art"><span>PS</span><small>PLAYSTATION</small></div>
+        <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.fileName)} · ${formatSize(entry.size)}</p><span class="game-badges"><span>PS1 IMAGE</span><span>ON THIS DEVICE</span></span></div>
+        <div class="personal-game-actions"><button class="primary-btn focusable" data-play="${entry.id}">▶ Play</button><button class="secondary-btn focusable" data-remove="${entry.id}" aria-label="Remove ${escapeHtml(entry.title)}">Remove</button></div>
+      </article>`).join('');
+      emptyLibrary.hidden=entries.length!==0;
+      personalGrid.querySelectorAll('[data-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.play)));
+      personalGrid.querySelectorAll('[data-remove]').forEach(button=>button.addEventListener('click',()=>deleteSavedGame(button.dataset.remove)));
+    }catch(error){notify(error.message)}
+  }
+  function escapeHtml(value){
+    return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  }
+  async function importGame(file){
+    const allowed=['bin','iso','img','pbp','chd'];
+    const extension=(file.name.split('.').pop()||'').toLowerCase();
+    if(!allowed.includes(extension)){notify('That file type is not supported by this first PS1 importer.');return}
+    if(file.size===0){notify('That file is empty. Choose a game image file.');return}
+    if(file.size>1024*1024*1024){notify('This first version supports files up to 1 GB.');return}
+    try{
+      if(!database)database=await openDatabase();
+      if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist();
+      const title=file.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim()||'PlayStation game';
+      await storeGame({id:safeId(),title,fileName:file.name,size:file.size,type:file.type||'application/octet-stream',blob:file,lastPlayed:0,addedAt:Date.now()});
+      await renderPersonalLibrary();
+      notify('Added '+title+' to My games.');
+    }catch(error){
+      notify('Could not save the file: '+(error.message||'Storage may be full.'));
+    }
+  }
+  async function deleteSavedGame(id){
+    try{await removeGame(id);await renderPersonalLibrary();notify('Game removed from this device.')}
+    catch(error){notify(error.message)}
+  }
+  async function launchSavedGame(id){
+    try{
+      const entry=await readGame(id);
+      if(!entry){notify('That game is no longer in your library.');return}
+      const file=new File([entry.blob],entry.fileName,{type:entry.type||'application/octet-stream'});
+      startPs1Emulator(file,entry.title);
+      entry.lastPlayed=Date.now();
+      await storeGame(entry);
+    }catch(error){notify('Could not open the game: '+(error.message||'Unknown error.'))}
+  }
+  function startPs1Emulator(file,title){
+    homeShell.hidden=true;
+    emulatorPanel.hidden=false;
+    document.body.classList.add('emulator-active');
+    document.getElementById('emulator-game-title').textContent=title;
+    document.getElementById('emulator-status').textContent='Loading the PlayStation emulator…';
+    emulatorScreen.innerHTML='<div class="emulator-loading">Preparing your game…</div>';
+    window.EJS_player='#emulator-screen';
+    window.EJS_gameName=title;
+    window.EJS_gameUrl=file;
+    window.EJS_core='psx';
+    window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
+    window.EJS_startOnLoaded=true;
+    window.EJS_Buttons={playPause:true,volume:true,fullscreen:true,settings:true};
+    const script=document.createElement('script');
+    script.src='https://cdn.emulatorjs.org/stable/data/loader.js';
+    script.async=true;
+    script.onerror=()=>{
+      document.getElementById('emulator-status').textContent='The emulator loader could not be downloaded. Check the Xbox internet connection and try again.';
+      notify('Could not load the emulator. Check your connection.');
+    };
+    script.onload=()=>{document.getElementById('emulator-status').textContent='Emulator loaded. Use your Xbox controller to play.'};
+    document.body.appendChild(script);
+  }
+  function exitEmulator(){
+    // Reloading clears the running WebAssembly core; the IndexedDB library remains saved.
+    window.location.reload();
+  }
   function render(){
     const term=search.value.trim().toLowerCase();
     const visible=games.filter(g=>(activeFilter==='All'||g.system===activeFilter)&&(!term||(g.title+' '+g.system+' '+g.genre).toLowerCase().includes(term)));
     grid.innerHTML=visible.map(g=>`<button class="game-card focusable" data-game="${g.id}" aria-label="View ${g.title} details">
       <span class="cover" style="--cover-a:${g.colors[0]};--cover-b:${g.colors[1]}"><span>${g.mark}</span></span>
-      <span class="game-info"><h3>${g.title}</h3><p>${g.system} · ${g.year}</p><span class="game-badges"><span>${g.genre}</span><span>DEMO ENTRY</span>${favorites.has(g.id)?'<span>★ SAVED</span>':''}</span></span>
+      <span class="game-info"><h3>${g.title}</h3><p>${g.system} · ${g.year}</p><span class="game-badges"><span>${g.genre}</span><span>SAMPLE ENTRY</span>${favorites.has(g.id)?'<span>★ SAVED</span>':''}</span></span>
     </button>`).join('');
     document.getElementById('no-results').hidden=visible.length!==0;
     document.getElementById('result-count').textContent=visible.length+' SAMPLE '+(visible.length===1?'ENTRY':'ENTRIES');
@@ -26,8 +164,7 @@
   function setFilter(filter){
     activeFilter=filter;
     document.querySelectorAll('[data-filter]').forEach(btn=>{const active=btn.dataset.filter===filter;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active))});
-    render();
-    document.getElementById('library').scrollIntoView({behavior:'smooth'});
+    render();document.getElementById('library').scrollIntoView({behavior:'smooth'});
   }
   function openGame(id){
     selectedGame=games.find(g=>g.id===id);if(!selectedGame)return;
@@ -37,15 +174,24 @@
     document.getElementById('dialog-meta').innerHTML=[selectedGame.year,selectedGame.genre,'Sample catalog entry'].map(x=>'<span>'+x+'</span>').join('');
     updateFavoriteButton();dialog.showModal();
   }
-  function updateFavoriteButton(){const saved=favorites.has(selectedGame.id);document.getElementById('favorite-game').textContent=saved?'★ Remove favorite':'☆ Add to favorites'}
+  function updateFavoriteButton(){
+    const saved=favorites.has(selectedGame.id);
+    document.getElementById('favorite-game').textContent=saved?'★ Remove favorite':'☆ Add to favorites';
+  }
   document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>setFilter(btn.dataset.filter)));
   document.querySelectorAll('[data-system-filter]').forEach(btn=>btn.addEventListener('click',()=>setFilter(btn.dataset.systemFilter)));
-  document.querySelector('[data-action="library"]').addEventListener('click',()=>document.getElementById('library').scrollIntoView({behavior:'smooth'}));
+  document.querySelector('[data-action="library"]').addEventListener('click',()=>document.getElementById('my-library').scrollIntoView({behavior:'smooth'}));
   search.addEventListener('input',render);
+  document.getElementById('import-game').addEventListener('click',()=>fileInput.click());
+  fileInput.addEventListener('change',async event=>{
+    const file=event.target.files&&event.target.files[0];
+    if(file)await importGame(file);
+    fileInput.value='';
+  });
+  document.getElementById('exit-emulator').addEventListener('click',exitEmulator);
   document.getElementById('dialog-close').addEventListener('click',()=>dialog.close());
   document.getElementById('launch-game').addEventListener('click',()=>{
-    notify('Opening your existing Retro Player web emulator…');
-    window.location.href='https://ps1-player.vercel.app/';
+    dialog.close();document.getElementById('import-game').focus();fileInput.click();
   });
   document.getElementById('favorite-game').addEventListener('click',()=>{
     if(!selectedGame)return;
@@ -55,7 +201,8 @@
   dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
 
   // Controller-friendly focus movement using the browser Gamepad API.
-  const selector='button,a[href],input,[tabindex]:not([tabindex="-1"])';let lastDirection=0,lastButtons={};
+  const selector='button,a[href],input,[tabindex]:not([tabindex="-1"])';
+  let lastDirection=0,lastButtons={};
   function items(){return [...document.querySelectorAll(selector)].filter(el=>!el.disabled&&el.offsetParent!==null)}
   function moveFocus(dx,dy){
     const list=items();if(!list.length)return;const current=document.activeElement;
@@ -81,17 +228,12 @@
   window.addEventListener('gamepaddisconnected',()=>notify('Controller disconnected.'));
   if('getGamepads'in navigator)requestAnimationFrame(poll);
   document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)&&!['INPUT'].includes(document.activeElement?.tagName)){e.preventDefault();moveFocus(e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0,e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0)}});
-  // Native Xbox shell bridge. The UWP host forwards physical controller input here.
-  window.RetroPlayerNativeInput = function(action){
-    if(action === 'A'){ document.activeElement?.click(); return; }
-    if(action === 'B'){
-      if(dialog.open) dialog.close();
-      else if(location.hostname === 'ps1-player.vercel.app' && history.length > 1) history.back();
-      else if(document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
-      return;
-    }
-    const key = ({ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight'})[action];
-    if(key) document.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));
+  window.RetroPlayerNativeInput=function(action){
+    if(action==='A'){document.activeElement?.click();return}
+    if(action==='B'){if(dialog.open)dialog.close();else if(emulatorPanel&&!emulatorPanel.hidden)exitEmulator();else if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur();return}
+    const key=({ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight'})[action];
+    if(key)document.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));
   };
   render();
+  openDatabase().then(db=>{database=db;renderPersonalLibrary()}).catch(error=>notify('Local library storage unavailable: '+error.message));
 })();

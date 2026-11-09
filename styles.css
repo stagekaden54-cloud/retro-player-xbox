@@ -4,3 +4,30 @@
 @media(max-width:900px){.game-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:760px){.app-shell{padding:0 22px}.topbar{height:70px}.top-meta{font-size:8px}.hero{min-height:490px}.hero-art{right:-180px;opacity:.35}.hero h1{letter-spacing:-3px}.hero-copy{padding:55px 0 80px}.section-heading{align-items:flex-start;gap:10px;flex-direction:column}.library-tools{align-items:stretch;flex-direction:column}.search-wrap{max-width:none}.filters{justify-content:flex-start}.game-grid{grid-template-columns:1fr}.system-grid{grid-template-columns:repeat(2,1fr)}.status-panel{align-items:flex-start;flex-direction:column}footer{gap:12px;flex-wrap:wrap;font-size:8px}footer span:nth-child(2){display:none}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
+
+[hidden]{display:none!important}
+.import-help{margin:-8px 0 18px;color:#8ea497;font-size:11px;line-height:1.6}
+.personal-game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.personal-game-card{display:flex;align-items:center;gap:14px;min-width:0;padding:13px;background:linear-gradient(145deg,#14251e,#0d1914);border:1px solid var(--line);border-radius:12px}
+.personal-game-art{width:68px;height:78px;flex:none;border-radius:8px;background:linear-gradient(145deg,#315a42,#14291e);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--green);font:800 23px 'DM Mono';box-shadow:inset 0 0 0 1px #ffffff20}
+.personal-game-art small{font-size:7px;letter-spacing:1px;margin-top:5px}
+.personal-game-info{flex:1;min-width:0}
+.personal-game-info h3{font-size:13px;margin:0 0 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.personal-game-info p{font-size:10px;color:#91a49a;margin:0 0 8px;overflow-wrap:anywhere}
+.personal-game-actions{display:flex;flex-direction:column;gap:7px;flex:none}
+.personal-game-actions .primary-btn,.personal-game-actions .secondary-btn{padding:9px 11px;font-size:10px}
+.empty-library{padding:28px;text-align:center;border:1px dashed #66836d66;border-radius:12px;background:#0d1914}
+.empty-library strong{font-size:14px}
+.empty-library p{margin:8px 0 0;color:var(--muted);font-size:11px}
+.emulator-panel{position:fixed;inset:0;z-index:20;background:#030705;display:flex;flex-direction:column}
+.emulator-topbar{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 20px;background:#0c1711;border-bottom:1px solid var(--line);color:var(--green);font:10px 'DM Mono';letter-spacing:1px}
+.emulator-topbar>div{display:flex;align-items:center;gap:9px}
+.emulator-topbar .secondary-btn{padding:10px 13px;font-size:11px}
+.emulator-game-title{max-width:35%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d7e6da;text-align:right}
+.emulator-screen{flex:1;min-height:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.emulator-screen #game,.emulator-screen #display,.emulator-screen canvas{width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:contain}
+.emulator-loading{color:#a9c59d;font:13px 'DM Mono';letter-spacing:1px}
+.emulator-help{min-height:28px;margin:0;padding:7px 14px;background:#0c1711;color:#8fa394;text-align:center;font:9px 'DM Mono';letter-spacing:.5px}
+body.emulator-active{overflow:hidden}
+@media(max-width:900px){.personal-game-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.personal-game-card{align-items:flex-start;flex-wrap:wrap}.personal-game-actions{width:100%;flex-direction:row}.personal-game-actions button{flex:1}.emulator-topbar{padding:8px 10px;gap:8px}.emulator-topbar>div{display:none}.emulator-game-title{max-width:45%;font-size:8px}}

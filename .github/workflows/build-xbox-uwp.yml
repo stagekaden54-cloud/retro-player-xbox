@@ -66,7 +66,7 @@ jobs:
       - name: Stage public development certificate
         shell: pwsh
         run: |
-          $packageDir = "XboxShell/bin/x64/Release/AppPackages"
+          $packageDir = "XboxShell/AppPackages"
           New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
           Copy-Item "$env:CER_PATH" (Join-Path $packageDir "RetroPlayerXbox.cer")
 
@@ -74,6 +74,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: retro-player-xbox-uwp-x64
-          path: XboxShell/bin/x64/Release/AppPackages/**/*
+          path: XboxShell/AppPackages/**/*
           if-no-files-found: error
           retention-days: 14

@@ -47,3 +47,62 @@ body.emulator-active{overflow:hidden}
 body.large-interface .app-shell{max-width:1600px;padding-left:6vw;padding-right:6vw}body.large-interface .topbar{height:100px}body.large-interface .section h2{font-size:clamp(26px,3vw,38px)}body.large-interface .section-description,body.large-interface .hero-sub{font-size:1.12em}body.large-interface .primary-btn,body.large-interface .secondary-btn{font-size:15px;padding:17px 22px}body.large-interface .game-card{min-height:230px}body.reduce-motion,body.reduce-motion *{scroll-behavior:auto!important;animation:none!important;transition:none!important}
 body.tv-mode-fallback .app-shell{max-width:1680px;padding-left:4vw;padding-right:4vw}body.tv-mode-fallback .topbar{height:104px}body.tv-mode-fallback .hero{min-height:560px}body.tv-mode-fallback .hero h1{font-size:clamp(64px,8vw,104px)}body.tv-mode-fallback .section{padding-top:64px;padding-bottom:64px}
 @media(max-width:760px){.top-actions{gap:7px}.top-action{padding:8px;font-size:9px}.top-action span{display:none}.settings-content{padding-left:18px;padding-right:18px}.settings-header{padding:26px 20px 20px}.settings-footer{padding:14px 20px}.settings-stats{grid-template-columns:1fr}.settings-dialog{max-height:90vh}}@media(min-width:761px) and (max-width:1050px){.top-actions{gap:9px}.top-meta{gap:8px}.top-action{font-size:9px}}
+
+
+/* Retro Player Xbox 1.0 — console library dashboard */
+.main-nav{display:flex;align-items:center;gap:7px;margin-left:auto;margin-right:24px}
+.nav-link{border:0;background:transparent;color:#91a49a;padding:10px 12px;border-radius:7px;font:10px 'DM Mono',monospace;letter-spacing:.8px;cursor:pointer}
+.nav-link:hover,.nav-link:focus-visible{background:#1a3022;color:var(--green);outline:1px solid #9bf56b66}
+.dashboard-hero{min-height:510px;border:1px solid #9bf56b1c;border-top:0;border-radius:0 0 22px 22px;background:linear-gradient(110deg,#102219 0%,#0b1711 54%,#0b1711 100%);padding-left:4.5%;padding-right:4.5%}
+.dashboard-hero .hero-copy{max-width:670px;padding:56px 0 72px}
+.dashboard-hero h1{font-size:clamp(48px,6.2vw,78px);letter-spacing:-4px}
+.dashboard-hero .eyebrow{display:flex;align-items:center;gap:10px}
+.dashboard-hero .hero-art{right:2%;opacity:.8}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.hero-featured{display:flex;flex-direction:column;gap:5px;margin-top:30px;padding:14px 17px;max-width:390px;border-left:2px solid var(--green);background:linear-gradient(90deg,#9bf56b13,transparent)}
+.featured-kicker{font:8px 'DM Mono';letter-spacing:1.4px;color:#9bf56b}
+.hero-featured strong{font-size:15px;letter-spacing:-.2px}
+.hero-featured>span:last-child{font-size:10px;color:#91a49a}
+.dashboard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0 6px}
+.dashboard-stats>div{padding:17px 20px;border:1px solid var(--line);border-radius:11px;background:linear-gradient(145deg,#14251e,#0d1914);display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:center}
+.dashboard-stats>div>span{grid-column:1/-1;color:#8ba092;font:8px 'DM Mono';letter-spacing:1.2px}
+.dashboard-stats strong{font-size:27px;line-height:1.2;color:var(--green)}
+.dashboard-stats small{color:#91a49a;font-size:10px}
+.library-filter-bar{display:flex;gap:8px;margin:22px 0 0}
+.library-filter{border:1px solid var(--line);border-radius:7px;background:#101d18;color:#9caf9f;padding:9px 14px;font:10px 'DM Mono';cursor:pointer}
+.library-filter.active{background:#9bf56b;color:#0b170f;border-color:#9bf56b}
+.personal-game-card{align-items:stretch;min-height:142px;background:linear-gradient(145deg,#172a20,#0d1914);transition:border-color .16s,transform .16s}
+.personal-game-card:hover{border-color:#9bf56b66;transform:translateY(-2px)}
+.personal-game-art{width:104px;height:auto;min-height:112px;border-radius:8px;background:radial-gradient(circle at 30% 20%,#5b9b5e,#1c442e 52%,#0c1c13);border:1px solid #9bf56b33;position:relative;overflow:hidden}
+.personal-game-art:before{content:"";position:absolute;width:140px;height:140px;border:1px solid #c4ff9d55;border-radius:50%;transform:translate(18px,-22px)}
+.personal-game-art:after{content:"";position:absolute;width:72px;height:72px;border:1px solid #c4ff9d44;border-radius:50%;transform:translate(-16px,24px)}
+.personal-game-art span{z-index:1;font-size:27px;text-shadow:0 3px 15px #0009}
+.personal-game-art small{z-index:1}
+.personal-game-info{align-self:center}
+.personal-game-info h3{font-size:15px}
+.personal-game-info p{font-size:10px}
+.personal-game-actions{justify-content:center;min-width:92px}
+.personal-game-actions button{white-space:nowrap}
+.personal-game-actions .secondary-btn{background:#1b3024}
+#recently-played .personal-game-card{min-height:118px}
+#recently-played .personal-game-art{width:82px;min-height:90px}
+#library{padding-top:64px}
+.section{scroll-margin-top:18px}
+@media(max-width:1050px){.main-nav{gap:0;margin-right:10px}.nav-link{padding:8px;font-size:9px}.dashboard-hero .hero-art{right:-5%}}
+@media(max-width:760px){
+ .main-nav{display:none}
+ .dashboard-hero{min-height:550px;padding-left:22px;padding-right:22px}
+ .dashboard-hero .hero-copy{padding:48px 0 85px}
+ .dashboard-hero h1{font-size:clamp(43px,11vw,64px);letter-spacing:-2.5px}
+ .dashboard-hero .hero-art{right:-190px;opacity:.22}
+ .hero-featured{max-width:100%}
+ .dashboard-stats{gap:7px}
+ .dashboard-stats>div{padding:12px 10px;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+ .dashboard-stats strong{font-size:23px}
+ .dashboard-stats small{font-size:9px}
+ .personal-game-card{flex-wrap:nowrap;align-items:center}
+ .personal-game-art{width:76px;min-height:92px}
+ .personal-game-actions{width:auto;min-width:76px;flex-direction:column}
+ .personal-game-actions button{width:100%;padding:8px 6px!important;font-size:9px!important}
+}
+@media(max-width:420px){.dashboard-stats>div>span{font-size:7px;letter-spacing:.5px}.dashboard-stats small{font-size:8px}.personal-game-art{width:62px;min-height:82px}.personal-game-info h3{font-size:12px}.personal-game-actions{min-width:66px}}

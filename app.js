@@ -295,25 +295,76 @@
     for(const el of list){if(el===current)continue;const r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;const primary=dx?(x-ox)*dx:(y-oy)*dy;if(primary<=4)continue;const score=primary+Math.abs(dx?y-oy:x-ox)*2.2;if(score<bestScore){bestScore=score;best=el}}
     if(best)best.focus();
   }
+  let lastPadId='';
+  function updateWebControllerStatus(pad){
+    const id=pad?.id||'';
+    if(id!==lastPadId){
+      lastPadId=id;
+      if(controllerStatus)controllerStatus.textContent=pad?'Connected: '+(id||'Gamepad'):'Waiting for a controller';
+    }
+  }
   function poll(){
-    const pad=[...(navigator.getGamepads?navigator.getGamepads():[])].find(Boolean);
+    // The native Xbox shell owns dashboard navigation. Leave the browser Gamepad API
+    // available to EmulatorJS while a game is running; do not send duplicate UI input.
+    if(window.RetroPlayerNativeHost){
+      requestAnimationFrame(poll);
+      return;
+    }
+    const pads=navigator.getGamepads?[...navigator.getGamepads()]:[];
+    const pad=pads.find(p=>p&&p.connected);
+    updateWebControllerStatus(pad);
     if(pad){
-      const pressed=i=>!!pad.buttons[i]?.pressed,ax=Math.abs(pad.axes[0]||0)>.55?Math.sign(pad.axes[0]):0,ay=Math.abs(pad.axes[1]||0)>.55?Math.sign(pad.axes[1]):0;
-      if((ax||ay)&&!lastDirection)moveFocus(ax,ay);lastDirection=ax||ay;
-      if(pressed(0)&&!lastButtons.a)document.activeElement?.click();
-      if(pressed(1)&&!lastButtons.b){if(dialog.open)dialog.close();else if(document.activeElement!==document.body)document.activeElement.blur();else window.scrollTo({top:0,behavior:'smooth'})}
-      if(pressed(12)&&!lastButtons.up)moveFocus(0,-1);if(pressed(13)&&!lastButtons.down)moveFocus(0,1);if(pressed(14)&&!lastButtons.left)moveFocus(-1,0);if(pressed(15)&&!lastButtons.right)moveFocus(1,0);
-      lastButtons={a:pressed(0),b:pressed(1),up:pressed(12),down:pressed(13),left:pressed(14),right:pressed(15)};
-    }else{lastDirection=0;lastButtons={}}
+      const pressed=i=>!!pad.buttons[i]?.pressed;
+      const ax=Math.abs(pad.axes[0]||0)>.55?Math.sign(pad.axes[0]):0;
+      const ay=Math.abs(pad.axes[1]||0)>.55?Math.sign(pad.axes[1]):0;
+      if((ax||ay)&&!lastDirection)moveFocus(ax,ay);
+      lastDirection=ax||ay;
+      if(pressed(0)&&!lastButtons.a)window.RetroPlayerNativeInput('A');
+      if(pressed(1)&&!lastButtons.b)window.RetroPlayerNativeInput('B');
+      if(pressed(2)&&!lastButtons.x)window.RetroPlayerNativeInput('X');
+      if(pressed(3)&&!lastButtons.y)window.RetroPlayerNativeInput('Y');
+      if(pressed(4)&&!lastButtons.lb)window.RetroPlayerNativeInput('LB');
+      if(pressed(5)&&!lastButtons.rb)window.RetroPlayerNativeInput('RB');
+      if(pressed(6)&&!lastButtons.lt)window.RetroPlayerNativeInput('LT');
+      if(pressed(7)&&!lastButtons.rt)window.RetroPlayerNativeInput('RT');
+      if(pressed(12)&&!lastButtons.up)moveFocus(0,-1);
+      if(pressed(13)&&!lastButtons.down)moveFocus(0,1);
+      if(pressed(14)&&!lastButtons.left)moveFocus(-1,0);
+      if(pressed(15)&&!lastButtons.right)moveFocus(1,0);
+      lastButtons={a:pressed(0),b:pressed(1),x:pressed(2),y:pressed(3),lb:pressed(4),rb:pressed(5),lt:pressed(6),rt:pressed(7),up:pressed(12),down:pressed(13),left:pressed(14),right:pressed(15)};
+    }else{
+      lastDirection=0;
+      lastButtons={};
+    }
     requestAnimationFrame(poll);
   }
   window.addEventListener('gamepadconnected',e=>notify('Controller connected: '+e.gamepad.id));
   window.addEventListener('gamepaddisconnected',()=>notify('Controller disconnected.'));
   if('getGamepads'in navigator)requestAnimationFrame(poll);
   document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)&&!['INPUT'].includes(document.activeElement?.tagName)){e.preventDefault();moveFocus(e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0,e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0)}});
+  // Native UWP host bridge. The host owns dashboard input on Xbox; the browser
+  // Gamepad API remains untouched so EmulatorJS can read gameplay input itself.
+  window.RetroPlayerNativeHost=false;
+  window.RetroPlayerNativeControllerStatus=function(status){
+    if(controllerStatus)controllerStatus.textContent=status;
+  };
   window.RetroPlayerNativeInput=function(action){
+    window.dispatchEvent(new CustomEvent('retroplayer:gamepad',{detail:{action}}));
     if(action==='A'){document.activeElement?.click();return}
-    if(action==='B'){if(dialog.open)dialog.close();else if(emulatorPanel&&!emulatorPanel.hidden)exitEmulator();else if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur();return}
+    if(action==='B'){
+      if(dialog.open)dialog.close();
+      else if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur();
+      return;
+    }
+    if(action==='X'){
+      const favorite=document.getElementById('favorite-game');
+      if(dialog.open&&favorite)favorite.click();
+      return;
+    }
+    if(action==='Y'){
+      if(dialog.open)dialog.close();
+      return;
+    }
     const key=({ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight'})[action];
     if(key)document.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));
   };

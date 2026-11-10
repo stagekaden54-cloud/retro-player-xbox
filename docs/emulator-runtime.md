@@ -7,7 +7,7 @@ The native Xbox shell loads the Retro Player Xbox library from the Vercel projec
 - Library UI: https://retro-player-xbox.vercel.app/
 - Existing emulator website: https://ps1-player.vercel.app/
 
-The Xbox host allowlists both HTTPS origins. The native controller bridge forwards D-pad, A, and B input to the web page. B returns to the library when the emulator website is open and the browser history contains the library page.
+The Xbox host allowlists both HTTPS origins. The native controller bridge forwards dashboard navigation and supported button actions to the web page. The native shell owns dashboard input on Xbox to avoid duplicate browser/native activations. During emulation, the shell does not inject dashboard input; the emulator is expected to read the controller through the WebView2 browser Gamepad API.
 
 This is an initial runtime handoff, not per-title launch integration. The demo catalog entries are metadata only and do not point to ROM files.
 
@@ -17,7 +17,7 @@ This is an initial runtime handoff, not per-title launch integration. The demo c
 2. EmulatorJS initializes without browser API errors.
 3. WebAssembly and WebGL are available to the player.
 4. Audio output works after the user starts a game.
-5. The native controller bridge and the emulator's own controller mapping do not conflict.
+5. The native dashboard controller bridge and the emulator's browser Gamepad API do not conflict.
 6. User-selected game files can be read by the player in the Xbox WebView2 environment.
 7. Memory use and frame pacing remain stable during longer sessions.
 

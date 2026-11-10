@@ -4,15 +4,56 @@
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     Background="#07110E">
   <Grid Background="#07110E">
-    <controls:WebView2 x:Name="PlayerWebView"
-      HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-    <Grid x:Name="StartupOverlay" Background="#07110E" Visibility="Visible">
-      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
-        <TextBlock Text="RETRO PLAYER" Foreground="#9BF56B" FontSize="30"
-          FontWeight="Bold" HorizontalAlignment="Center" />
-        <TextBlock x:Name="StartupStatus" Text="Starting Xbox interface…" Foreground="#A8B9AF"
-          FontSize="16" HorizontalAlignment="Center" />
+    <Grid.RowDefinitions>
+      <RowDefinition Height="64" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="30" />
+    </Grid.RowDefinitions>
+
+    <Grid Grid.Row="0" Background="#0D1B15" Padding="22,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+        <TextBlock Text="RETRO PLAYER" Foreground="#9BF56B" FontSize="21"
+          FontWeight="Bold" VerticalAlignment="Center" />
+        <TextBlock Text="XBOX" Foreground="#A8B9AF" FontSize="12"
+          FontWeight="SemiBold" VerticalAlignment="Center" />
       </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+        <Button x:Name="ImportButton" Content="Import game" Click="ImportGame_Click"
+          Background="#9BF56B" Foreground="#07110E" FontWeight="SemiBold" MinWidth="112" />
+        <Button Content="Home" Click="Home_Click" MinWidth="70" />
+        <Button Content="Reload" Click="Reload_Click" MinWidth="78" />
+        <Button Content="About" Click="About_Click" MinWidth="72" />
+      </StackPanel>
+    </Grid>
+
+    <Grid Grid.Row="1">
+      <controls:WebView2 x:Name="PlayerWebView"
+        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+      <Grid x:Name="StartupOverlay" Background="#07110E" Visibility="Visible">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="14" Width="520">
+          <TextBlock Text="RETRO PLAYER" Foreground="#9BF56B" FontSize="32"
+            FontWeight="Bold" HorizontalAlignment="Center" />
+          <TextBlock x:Name="StartupStatus" Text="Starting Xbox interface…" Foreground="#A8B9AF"
+            FontSize="16" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
+          <Button x:Name="RetryButton" Content="Retry connection" Click="Reload_Click"
+            Visibility="Collapsed" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Grid>
+    </Grid>
+
+    <Grid Grid.Row="2" Background="#0D1B15" Padding="18,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <TextBlock x:Name="ShellStatus" Text="Starting native Xbox shell…"
+        Foreground="#A8B9AF" FontSize="11" VerticalAlignment="Center" />
+      <TextBlock x:Name="ControllerStatus" Text="Controller: searching"
+        Grid.Column="1" Foreground="#9BF56B" FontSize="11" VerticalAlignment="Center" />
     </Grid>
   </Grid>
 </Page>

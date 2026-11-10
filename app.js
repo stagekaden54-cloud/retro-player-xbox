@@ -319,13 +319,19 @@
       const ay=Math.abs(pad.axes[1]||0)>.55?Math.sign(pad.axes[1]):0;
       if((ax||ay)&&!lastDirection)moveFocus(ax,ay);
       lastDirection=ax||ay;
-      if(pressed(0)&&!lastButtons.a)document.activeElement?.click();
-      if(pressed(1)&&!lastButtons.b){if(dialog.open)dialog.close();else if(document.activeElement!==document.body)document.activeElement.blur();else window.scrollTo({top:0,behavior:'smooth'})}
+      if(pressed(0)&&!lastButtons.a)window.RetroPlayerNativeInput('A');
+      if(pressed(1)&&!lastButtons.b)window.RetroPlayerNativeInput('B');
+      if(pressed(2)&&!lastButtons.x)window.RetroPlayerNativeInput('X');
+      if(pressed(3)&&!lastButtons.y)window.RetroPlayerNativeInput('Y');
+      if(pressed(4)&&!lastButtons.lb)window.RetroPlayerNativeInput('LB');
+      if(pressed(5)&&!lastButtons.rb)window.RetroPlayerNativeInput('RB');
+      if(pressed(6)&&!lastButtons.lt)window.RetroPlayerNativeInput('LT');
+      if(pressed(7)&&!lastButtons.rt)window.RetroPlayerNativeInput('RT');
       if(pressed(12)&&!lastButtons.up)moveFocus(0,-1);
       if(pressed(13)&&!lastButtons.down)moveFocus(0,1);
       if(pressed(14)&&!lastButtons.left)moveFocus(-1,0);
       if(pressed(15)&&!lastButtons.right)moveFocus(1,0);
-      lastButtons={a:pressed(0),b:pressed(1),up:pressed(12),down:pressed(13),left:pressed(14),right:pressed(15)};
+      lastButtons={a:pressed(0),b:pressed(1),x:pressed(2),y:pressed(3),lb:pressed(4),rb:pressed(5),lt:pressed(6),rt:pressed(7),up:pressed(12),down:pressed(13),left:pressed(14),right:pressed(15)};
     }else{
       lastDirection=0;
       lastButtons={};
@@ -343,6 +349,7 @@
     if(controllerStatus)controllerStatus.textContent=status;
   };
   window.RetroPlayerNativeInput=function(action){
+    window.dispatchEvent(new CustomEvent('retroplayer:gamepad',{detail:{action}}));
     if(action==='A'){document.activeElement?.click();return}
     if(action==='B'){
       if(dialog.open)dialog.close();

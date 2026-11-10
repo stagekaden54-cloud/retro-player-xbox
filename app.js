@@ -18,6 +18,7 @@
   const personalSearch = document.getElementById('my-game-search');
   const personalSort = document.getElementById('my-game-sort');
   const personalNoResults = document.getElementById('personal-no-results');
+  const personalLoadMoreButton = document.getElementById('personal-load-more');
   const emptyLibrary = document.getElementById('empty-library');
   const homeShell = document.getElementById('home-shell');
   const emulatorPanel = document.getElementById('emulator-panel');
@@ -28,7 +29,20 @@
   const largeInterfaceSetting = document.getElementById('large-interface-setting');
   const reduceMotionSetting = document.getElementById('reduce-motion-setting');
   const controllerStatus = document.getElementById('settings-controller-status');
-  let toastTimer, activeFilter='All', personalFilter='All', selectedGame=null, database=null;
+  const performanceToggle = document.getElementById('perf-toggle');
+  const performancePanel = document.getElementById('performance-panel');
+  const performanceFps = document.getElementById('perf-fps');
+  const performanceCore = document.getElementById('perf-core');
+  const performanceMemory = document.getElementById('perf-memory');
+  const performanceSystem = document.getElementById('perf-system');
+  const PERSONAL_PAGE_SIZE = 24;
+  let toastTimer, personalSearchTimer, activeFilter='All', personalFilter='All', selectedGame=null, database=null;
+  let cachedPersonalEntries=null, personalEntriesPromise=null, sortedEntriesCache=new Map();
+  let personalVisibleLimit=PERSONAL_PAGE_SIZE, personalRenderSequence=0;
+  const performanceState = {
+    open:false, raf:0, frames:0, windowStart:0, fps:null,
+    startedAt:0, loaderLoadedAt:0, coreReadyAt:0, gameStartedAt:0
+  };
   const favorites = new Set(JSON.parse(localStorage.getItem('rp-xbox-favorites') || '[]'));
 
   function notify(message){
@@ -51,7 +65,7 @@
     return new Promise((resolve,reject)=>{
       const tx=database.transaction('games','readwrite');
       tx.objectStore('games').put(record);
-      tx.oncomplete=()=>resolve();
+      tx.oncomplete=()=>{cachedPersonalEntries=null;personalEntriesPromise=null;sortedEntriesCache.clear();resolve()};
       tx.onerror=()=>reject(tx.error||new Error('Could not save this game.'));
       tx.onabort=()=>reject(tx.error||new Error('Game save was cancelled.'));
     });
@@ -62,6 +76,16 @@
       request.onsuccess=()=>resolve(request.result||[]);
       request.onerror=()=>reject(request.error||new Error('Could not read your library.'));
     });
+  }
+  async function getPersonalEntries(){
+    if(cachedPersonalEntries)return cachedPersonalEntries;
+    if(!personalEntriesPromise){
+      personalEntriesPromise=readGames().then(entries=>{
+        cachedPersonalEntries=entries;
+        return entries;
+      }).finally(()=>{personalEntriesPromise=null});
+    }
+    return personalEntriesPromise;
   }
   function readGame(id){
     return new Promise((resolve,reject)=>{
@@ -74,7 +98,7 @@
     return new Promise((resolve,reject)=>{
       const tx=database.transaction('games','readwrite');
       tx.objectStore('games').delete(id);
-      tx.oncomplete=resolve;
+      tx.oncomplete=()=>{cachedPersonalEntries=null;personalEntriesPromise=null;sortedEntriesCache.clear();resolve()};
       tx.onerror=()=>reject(tx.error||new Error('Could not remove this game.'));
     });
   }
@@ -87,17 +111,24 @@
   }
   async function renderPersonalLibrary(){
     if(!database)return;
+    const renderSequence=++personalRenderSequence;
     try{
-      const entries=await readGames();
+      const entries=await getPersonalEntries();
+      if(renderSequence!==personalRenderSequence)return;
       const term=personalSearch.value.trim().toLowerCase();
       const sort=personalSort.value;
-      const sorted=[...entries].sort((a,b)=>{
-        if(sort==='title')return a.title.localeCompare(b.title);
-        if(sort==='size')return (b.size||0)-(a.size||0);
-        if(sort==='played')return (b.lastPlayed||0)-(a.lastPlayed||0);
-        return (b.addedAt||0)-(a.addedAt||0);
-      });
-      const visible=sorted.filter(entry=>(entry.title+' '+entry.fileName).toLowerCase().includes(term)&&(personalFilter==='All'||entry.favorite===true));
+      let sorted=sortedEntriesCache.get(sort);
+      if(!sorted){
+        sorted=[...entries].sort((a,b)=>{
+          if(sort==='title')return a.title.localeCompare(b.title);
+          if(sort==='size')return (b.size||0)-(a.size||0);
+          if(sort==='played')return (b.lastPlayed||0)-(a.lastPlayed||0);
+          return (b.addedAt||0)-(a.addedAt||0);
+        });
+        sortedEntriesCache.set(sort,sorted);
+      }
+      const filtered=sorted.filter(entry=>(entry.title+' '+entry.fileName).toLowerCase().includes(term)&&(personalFilter==='All'||entry.favorite===true));
+      const visible=filtered.slice(0,personalVisibleLimit);
       personalGrid.innerHTML=visible.map(entry=>{
         const system=entry.system||'PlayStation';
         const isN64=system==='Nintendo 64';
@@ -108,10 +139,9 @@
         </article>`;
       }).join('');
       emptyLibrary.hidden=entries.length!==0||personalFilter!=='All';
-      personalNoResults.hidden=entries.length===0||visible.length!==0;
-      personalGrid.querySelectorAll('[data-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.play)));
-      personalGrid.querySelectorAll('[data-remove]').forEach(button=>button.addEventListener('click',()=>deleteSavedGame(button.dataset.remove)));
-      personalGrid.querySelectorAll('[data-toggle-favorite]').forEach(button=>button.addEventListener('click',()=>togglePersonalFavorite(button.dataset.toggleFavorite)));
+      personalNoResults.hidden=entries.length===0||filtered.length!==0;
+      personalLoadMoreButton.hidden=filtered.length<=visible.length;
+      personalLoadMoreButton.textContent='Load more games ('+(filtered.length-visible.length)+' remaining)';
       const recent=entries.filter(entry=>entry.lastPlayed).sort((a,b)=>b.lastPlayed-a.lastPlayed).slice(0,4);
       recentGrid.innerHTML=recent.map(entry=>{const system=entry.system||'PlayStation';const isN64=system==='Nintendo 64';return `<article class="personal-game-card recent-game-card">
         <div class="personal-game-art ${isN64?'n64-game-art':''}"><span>${isN64?'N64':'PS'}</span><small>${isN64?'NINTENDO 64':'PLAYSTATION'}</small></div>
@@ -119,12 +149,15 @@
         <div class="personal-game-actions"><button class="primary-btn focusable" data-recent-play="${entry.id}">▶ Resume</button></div>
       </article>`}).join('');
       recentEmpty.hidden=recent.length!==0;
-      recentGrid.querySelectorAll('[data-recent-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.recentPlay)));
-      const favoriteCount=entries.filter(entry=>entry.favorite).length;
+      const recentCount=entries.reduce((count,entry)=>count+(entry.lastPlayed?1:0),0);
+      const favoriteCount=entries.reduce((count,entry)=>count+(entry.favorite?1:0),0);
       document.getElementById('dashboard-game-count').textContent=String(entries.length);
-      document.getElementById('dashboard-recent-count').textContent=String(entries.filter(entry=>entry.lastPlayed).length);
+      document.getElementById('dashboard-recent-count').textContent=String(recentCount);
       document.getElementById('dashboard-favorite-count').textContent=String(favoriteCount);
-      const featured=[...entries].sort((a,b)=>(b.lastPlayed||b.addedAt||0)-(a.lastPlayed||a.addedAt||0))[0];
+      const featured=entries.reduce((best,entry)=>{
+        const score=entry.lastPlayed||entry.addedAt||0;
+        return !best||score>(best.lastPlayed||best.addedAt||0)?entry:best;
+      },null);
       document.getElementById('featured-game-title').textContent=featured?featured.title:'Your next adventure starts here';
       document.getElementById('featured-game-meta').textContent=featured?(featured.lastPlayed?'Recently played · '+formatSize(featured.size):'Recently added · '+formatSize(featured.size)):'Import a compatible game to get started';
       document.getElementById('featured-game-subtitle').textContent=featured?'Ready to jump back into your collection? Your games stay saved on this device.':'Your retro collection, organized in one controller-first place.';
@@ -180,6 +213,53 @@
       await renderPersonalLibrary();
     }catch(error){notify('Could not open the game: '+(error.message||'Unknown error.'))}
   }
+  function formatElapsed(milliseconds){
+    if(!Number.isFinite(milliseconds)||milliseconds<0)return '—';
+    return milliseconds<1000?Math.round(milliseconds)+' ms':(milliseconds/1000).toFixed(1)+' s';
+  }
+  function readJavaScriptHeap(){
+    const memory=performance.memory;
+    return memory&&Number.isFinite(memory.usedJSHeapSize)
+      ?Math.round(memory.usedJSHeapSize/1024/1024)+' MB JS heap'
+      :'Unavailable in this browser';
+  }
+  function updatePerformanceReadouts(){
+    performanceFps.textContent=performanceState.fps===null?'Measuring…':performanceState.fps+' FPS estimate';
+    performanceCore.textContent=performanceState.coreReadyAt
+      ?formatElapsed(performanceState.coreReadyAt-performanceState.startedAt)
+      :(performanceState.loaderLoadedAt?'Initializing core…':'Waiting for loader…');
+    performanceMemory.textContent=readJavaScriptHeap();
+    performanceSystem.textContent=(window.EJS_core==='n64'?'Nintendo 64':'PlayStation')+' · EmulatorJS';
+  }
+  function samplePerformanceFrame(timestamp){
+    if(!performanceState.open||document.hidden)return;
+    if(!performanceState.windowStart)performanceState.windowStart=timestamp;
+    performanceState.frames++;
+    const elapsed=timestamp-performanceState.windowStart;
+    if(elapsed>=1000){
+      performanceState.fps=Math.round(performanceState.frames*1000/elapsed);
+      performanceState.frames=0;
+      performanceState.windowStart=timestamp;
+      updatePerformanceReadouts();
+    }
+    performanceState.raf=requestAnimationFrame(samplePerformanceFrame);
+  }
+  function stopPerformanceSampling(){
+    if(performanceState.raf)cancelAnimationFrame(performanceState.raf);
+    performanceState.raf=0;
+  }
+  function setPerformanceMonitor(open){
+    performanceState.open=open;
+    performancePanel.hidden=!open;
+    performanceToggle.setAttribute('aria-expanded',String(open));
+    performanceToggle.setAttribute('aria-pressed',String(open));
+    if(open){
+      performanceState.frames=0;
+      performanceState.windowStart=0;
+      updatePerformanceReadouts();
+      if(!document.hidden&&!performanceState.raf)performanceState.raf=requestAnimationFrame(samplePerformanceFrame);
+    }else stopPerformanceSampling();
+  }
   function startEmulator(file,title,system){
     const isN64=system==='Nintendo 64';
     homeShell.hidden=true;
@@ -189,6 +269,13 @@
     document.getElementById('emulator-system').textContent=isN64?'NINTENDO 64':'PLAYSTATION';
     document.getElementById('emulator-status').textContent='Loading the '+(isN64?'Nintendo 64':'PlayStation')+' emulator…';
     emulatorScreen.innerHTML='<div class="emulator-loading">Preparing your game…</div>';
+    performanceState.startedAt=performance.now();
+    performanceState.loaderLoadedAt=0;
+    performanceState.coreReadyAt=0;
+    performanceState.gameStartedAt=0;
+    performanceState.fps=null;
+    setPerformanceMonitor(false);
+    updatePerformanceReadouts();
     window.EJS_player='#emulator-screen';
     window.EJS_gameName=title;
     window.EJS_gameUrl=file;
@@ -196,17 +283,33 @@
     window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
     window.EJS_startOnLoaded=true;
     window.EJS_Buttons={playPause:true,volume:true,fullscreen:true,settings:true};
+    window.EJS_ready=function(){
+      performanceState.coreReadyAt=performance.now();
+      updatePerformanceReadouts();
+      document.getElementById('emulator-status').textContent='Emulator core initialized. Starting game…';
+    };
+    window.EJS_onGameStart=function(){
+      performanceState.gameStartedAt=performance.now();
+      document.getElementById('emulator-status').textContent='Game started · Use your controller to play.';
+    };
     const script=document.createElement('script');
+    script.id='emulatorjs-loader';
     script.src='https://cdn.emulatorjs.org/stable/data/loader.js';
     script.async=true;
     script.onerror=()=>{
       document.getElementById('emulator-status').textContent='The emulator loader could not be downloaded. Check the Xbox internet connection and try again.';
+      performanceCore.textContent='Loader failed';
       notify('Could not load the emulator. Check your connection.');
     };
-    script.onload=()=>{document.getElementById('emulator-status').textContent=(isN64?'Nintendo 64':'PlayStation')+' emulator loaded. Use your Xbox controller to play.'};
+    script.onload=()=>{
+      performanceState.loaderLoadedAt=performance.now();
+      updatePerformanceReadouts();
+      document.getElementById('emulator-status').textContent='Emulator loader downloaded; initializing the core…';
+    };
     document.body.appendChild(script);
   }
   function exitEmulator(){
+    stopPerformanceSampling();
     // Reloading clears the running WebAssembly core; the IndexedDB library remains saved.
     window.location.reload();
   }
@@ -242,15 +345,35 @@
   document.querySelectorAll('[data-system-filter]').forEach(btn=>btn.addEventListener('click',()=>setFilter(btn.dataset.systemFilter)));
   document.querySelector('[data-action="library"]').addEventListener('click',()=>document.getElementById('my-library').scrollIntoView({behavior:'smooth'}));
   search.addEventListener('input',render);
-  personalSearch.addEventListener('input',renderPersonalLibrary);
+  personalSearch.addEventListener('input',()=>{
+    personalVisibleLimit=PERSONAL_PAGE_SIZE;
+    clearTimeout(personalSearchTimer);
+    personalSearchTimer=setTimeout(renderPersonalLibrary,120);
+  });
+  personalLoadMoreButton.addEventListener('click',()=>{
+    personalVisibleLimit+=PERSONAL_PAGE_SIZE;
+    renderPersonalLibrary();
+  });
+  personalGrid.addEventListener('click',event=>{
+    const button=event.target.closest?.('button');
+    if(!button||!personalGrid.contains(button))return;
+    if(button.dataset.play)launchSavedGame(button.dataset.play);
+    else if(button.dataset.remove)deleteSavedGame(button.dataset.remove);
+    else if(button.dataset.toggleFavorite)togglePersonalFavorite(button.dataset.toggleFavorite);
+  });
+  recentGrid.addEventListener('click',event=>{
+    const button=event.target.closest?.('button[data-recent-play]');
+    if(button&&recentGrid.contains(button))launchSavedGame(button.dataset.recentPlay);
+  });
   document.querySelectorAll('[data-library-filter]').forEach(button=>button.addEventListener('click',()=>{
     personalFilter=button.dataset.libraryFilter;
+    personalVisibleLimit=PERSONAL_PAGE_SIZE;
     document.querySelectorAll('[data-library-filter]').forEach(item=>{const active=item.dataset.libraryFilter===personalFilter;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});
     renderPersonalLibrary();
   }));
   document.querySelectorAll('[data-scroll]').forEach(button=>button.addEventListener('click',()=>document.getElementById(button.dataset.scroll).scrollIntoView({behavior:'smooth'})));
   document.getElementById('hero-import-game').addEventListener('click',()=>fileInput.click());
-  personalSort.addEventListener('change',renderPersonalLibrary);
+  personalSort.addEventListener('change',()=>{personalVisibleLimit=PERSONAL_PAGE_SIZE;renderPersonalLibrary()});
   document.getElementById('import-game').addEventListener('click',()=>fileInput.click());
   fileInput.addEventListener('change',async event=>{
     const file=event.target.files&&event.target.files[0];
@@ -313,6 +436,11 @@
   reduceMotionSetting.addEventListener('change',applyDisplayPreferences);
   settingsDialog.addEventListener('click',event=>{if(event.target===settingsDialog)settingsDialog.close()});
   document.addEventListener('fullscreenchange',syncFullscreenState);
+  performanceToggle.addEventListener('click',()=>setPerformanceMonitor(performancePanel.hidden));
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)stopPerformanceSampling();
+    else if(performanceState.open&&!performanceState.raf)performanceState.raf=requestAnimationFrame(samplePerformanceFrame);
+  });
   window.addEventListener('gamepadconnected',event=>{controllerStatus.textContent='Connected: '+event.gamepad.id});
   window.addEventListener('gamepaddisconnected',()=>{controllerStatus.textContent='Waiting for a controller'});
   largeInterfaceSetting.checked=localStorage.getItem('rp-xbox-large-interface')==='true';
@@ -339,13 +467,11 @@
       if(controllerStatus)controllerStatus.textContent=pad?'Connected: '+(id||'Gamepad'):'Waiting for a controller';
     }
   }
+  let webGamepadRaf=0;
   function poll(){
-    // The native Xbox shell owns dashboard navigation. Leave the browser Gamepad API
-    // available to EmulatorJS while a game is running; do not send duplicate UI input.
-    if(window.RetroPlayerNativeHost){
-      requestAnimationFrame(poll);
-      return;
-    }
+    webGamepadRaf=0;
+    // Native Xbox owns dashboard navigation; leave browser gamepad access to EmulatorJS.
+    if(window.RetroPlayerNativeHost||document.hidden)return;
     const pads=navigator.getGamepads?[...navigator.getGamepads()]:[];
     const pad=pads.find(p=>p&&p.connected);
     updateWebControllerStatus(pad);
@@ -372,11 +498,21 @@
       lastDirection=0;
       lastButtons={};
     }
-    requestAnimationFrame(poll);
+    scheduleWebGamepadPoll();
   }
+  function scheduleWebGamepadPoll(){
+    if(!webGamepadRaf&&!document.hidden&&!window.RetroPlayerNativeHost&&'getGamepads'in navigator)
+      webGamepadRaf=requestAnimationFrame(poll);
+  }
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&webGamepadRaf){
+      cancelAnimationFrame(webGamepadRaf);
+      webGamepadRaf=0;
+    }else scheduleWebGamepadPoll();
+  });
   window.addEventListener('gamepadconnected',e=>notify('Controller connected: '+e.gamepad.id));
   window.addEventListener('gamepaddisconnected',()=>notify('Controller disconnected.'));
-  if('getGamepads'in navigator)requestAnimationFrame(poll);
+  scheduleWebGamepadPoll();
   document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)&&!['INPUT'].includes(document.activeElement?.tagName)){e.preventDefault();moveFocus(e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0,e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0)}});
   // Native UWP host bridge. The host owns dashboard input on Xbox; the browser
   // Gamepad API remains untouched so EmulatorJS can read gameplay input itself.
@@ -403,6 +539,10 @@
     }
     const key=({ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight'})[action];
     if(key)document.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));
+  };
+  window.RetroPlayerNativeInputBatch=function(actions){
+    if(!Array.isArray(actions))return;
+    for(const action of actions)window.RetroPlayerNativeInput(action);
   };
   // Native UWP file-picker bridge. The shell stages a selected file in its app-local
   // folder and exposes it through a restricted WebView2 virtual host mapping.

@@ -98,22 +98,22 @@
         return (b.addedAt||0)-(a.addedAt||0);
       });
       const visible=sorted.filter(entry=>(entry.title+' '+entry.fileName).toLowerCase().includes(term)&&(personalFilter==='All'||entry.favorite===true));
-      personalGrid.innerHTML=visible.map(entry=>`<article class="personal-game-card">
-        <div class="personal-game-art"><span>PS</span><small>PLAYSTATION</small></div>
-        <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.fileName)} · ${formatSize(entry.size)}</p><span class="game-badges"><span>PS1 IMAGE</span><span>ON THIS DEVICE</span>${entry.favorite?'<span>★ FAVORITE</span>':''}</span></div>
+      personalGrid.innerHTML=visible.map(entry=>{const system=entry.system||'PlayStation';const isN64=system==='Nintendo 64';return `<article class="personal-game-card">
+        <div class="personal-game-art ${isN64?'n64-game-art':''}"><span>${isN64?'N64':'PS'}</span><small>${isN64?'NINTENDO 64':'PLAYSTATION'}</small></div>
+        <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.fileName)} · ${formatSize(entry.size)}</p><span class="game-badges"><span>${isN64?'N64 ROM':'PS1 IMAGE'}</span><span>ON THIS DEVICE</span>${entry.favorite?'<span>★ FAVORITE</span>':''}</span></div>`
         <div class="personal-game-actions"><button class="primary-btn focusable" data-play="${entry.id}">▶ Play</button><button class="secondary-btn focusable" data-toggle-favorite="${entry.id}" aria-label="${entry.favorite?'Remove':'Add'} ${escapeHtml(entry.title)} ${entry.favorite?'from':'to'} favorites">${entry.favorite?'★ Saved':'☆ Favorite'}</button><button class="secondary-btn focusable" data-remove="${entry.id}" aria-label="Remove ${escapeHtml(entry.title)}">Remove</button></div>
-      </article>`).join('');
+      </article>`}).join('');
       emptyLibrary.hidden=entries.length!==0||personalFilter!=='All';
       personalNoResults.hidden=entries.length===0||visible.length!==0;
       personalGrid.querySelectorAll('[data-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.play)));
       personalGrid.querySelectorAll('[data-remove]').forEach(button=>button.addEventListener('click',()=>deleteSavedGame(button.dataset.remove)));
       personalGrid.querySelectorAll('[data-toggle-favorite]').forEach(button=>button.addEventListener('click',()=>togglePersonalFavorite(button.dataset.toggleFavorite)));
       const recent=entries.filter(entry=>entry.lastPlayed).sort((a,b)=>b.lastPlayed-a.lastPlayed).slice(0,4);
-      recentGrid.innerHTML=recent.map(entry=>`<article class="personal-game-card recent-game-card">
-        <div class="personal-game-art"><span>PS</span><small>PLAYSTATION</small></div>
+      recentGrid.innerHTML=recent.map(entry=>{const system=entry.system||'PlayStation';const isN64=system==='Nintendo 64';return `<article class="personal-game-card recent-game-card">
+        <div class="personal-game-art ${isN64?'n64-game-art':''}"><span>${isN64?'N64':'PS'}</span><small>${isN64?'NINTENDO 64':'PLAYSTATION'}</small></div>
         <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>Last played ${new Date(entry.lastPlayed).toLocaleString()} · ${entry.playCount||1} session${(entry.playCount||1)===1?'':'s'}</p><span class="game-badges"><span>RECENTLY PLAYED</span>${entry.favorite?'<span>★ FAVORITE</span>':''}</span></div>
         <div class="personal-game-actions"><button class="primary-btn focusable" data-recent-play="${entry.id}">▶ Resume</button></div>
-      </article>`).join('');
+      </article>`}).join('');
       recentEmpty.hidden=recent.length!==0;
       recentGrid.querySelectorAll('[data-recent-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.recentPlay)));
       const favoriteCount=entries.filter(entry=>entry.favorite).length;
@@ -140,18 +140,20 @@
     return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   }
   async function importGame(file){
-    const allowed=['bin','iso','img','pbp','chd'];
     const extension=(file.name.split('.').pop()||'').toLowerCase();
-    if(!allowed.includes(extension)){notify('That file type is not supported by this first PS1 importer.');return}
+    const n64Extensions=['z64','n64','v64'];
+    const ps1Extensions=['bin','iso','img','pbp','chd'];
+    const system=n64Extensions.includes(extension)?'Nintendo 64':ps1Extensions.includes(extension)?'PlayStation':null;
+    if(!system){notify('Unsupported file. Choose a PS1 image (BIN, ISO, IMG, PBP, CHD) or N64 ROM (Z64, N64, V64).');return}
     if(file.size===0){notify('That file is empty. Choose a game image file.');return}
-    if(file.size>1024*1024*1024){notify('This first version supports files up to 1 GB.');return}
+    if(file.size>1024*1024*1024){notify('This version supports files up to 1 GB.');return}
     try{
       if(!database)database=await openDatabase();
       if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist();
-      const title=file.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim()||'PlayStation game';
-      await storeGame({id:safeId(),title,fileName:file.name,size:file.size,type:file.type||'application/octet-stream',blob:file,lastPlayed:0,addedAt:Date.now()});
+      const title=file.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim()||(system==='Nintendo 64'?'Nintendo 64 game':'PlayStation game');
+      await storeGame({id:safeId(),title,system,fileName:file.name,size:file.size,type:file.type||'application/octet-stream',blob:file,lastPlayed:0,addedAt:Date.now()});
       await renderPersonalLibrary();
-      notify('Added '+title+' to My games.');
+      notify('Added '+title+' ('+(system==='Nintendo 64'?'N64':'PS1')+') to My games.');
     }catch(error){
       notify('Could not save the file: '+(error.message||'Storage may be full.'));
     }
@@ -165,24 +167,26 @@
       const entry=await readGame(id);
       if(!entry){notify('That game is no longer in your library.');return}
       const file=new File([entry.blob],entry.fileName,{type:entry.type||'application/octet-stream'});
-      startPs1Emulator(file,entry.title);
+      startEmulator(file,entry.title,entry.system||'PlayStation');
       entry.lastPlayed=Date.now();
       entry.playCount=(entry.playCount||0)+1;
       await storeGame(entry);
       await renderPersonalLibrary();
     }catch(error){notify('Could not open the game: '+(error.message||'Unknown error.'))}
   }
-  function startPs1Emulator(file,title){
+  function startEmulator(file,title,system){
+    const isN64=system==='Nintendo 64';
     homeShell.hidden=true;
     emulatorPanel.hidden=false;
     document.body.classList.add('emulator-active');
     document.getElementById('emulator-game-title').textContent=title;
-    document.getElementById('emulator-status').textContent='Loading the PlayStation emulator…';
+    document.getElementById('emulator-system').textContent=isN64?'NINTENDO 64':'PLAYSTATION';
+    document.getElementById('emulator-status').textContent='Loading the '+(isN64?'Nintendo 64':'PlayStation')+' emulator…';
     emulatorScreen.innerHTML='<div class="emulator-loading">Preparing your game…</div>';
     window.EJS_player='#emulator-screen';
     window.EJS_gameName=title;
     window.EJS_gameUrl=file;
-    window.EJS_core='psx';
+    window.EJS_core=isN64?'n64':'psx';
     window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
     window.EJS_startOnLoaded=true;
     window.EJS_Buttons={playPause:true,volume:true,fullscreen:true,settings:true};
@@ -193,7 +197,7 @@
       document.getElementById('emulator-status').textContent='The emulator loader could not be downloaded. Check the Xbox internet connection and try again.';
       notify('Could not load the emulator. Check your connection.');
     };
-    script.onload=()=>{document.getElementById('emulator-status').textContent='Emulator loaded. Use your Xbox controller to play.'};
+    script.onload=()=>{document.getElementById('emulator-status').textContent=(isN64?'Nintendo 64':'PlayStation')+' emulator loaded. Use your Xbox controller to play.'};
     document.body.appendChild(script);
   }
   function exitEmulator(){

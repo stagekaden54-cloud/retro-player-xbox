@@ -22,6 +22,12 @@
   const homeShell = document.getElementById('home-shell');
   const emulatorPanel = document.getElementById('emulator-panel');
   const emulatorScreen = document.getElementById('emulator-screen');
+  const settingsDialog = document.getElementById('settings-dialog');
+  const tvModeButton = document.getElementById('tv-mode-toggle');
+  const settingsFullscreenButton = document.getElementById('settings-fullscreen');
+  const largeInterfaceSetting = document.getElementById('large-interface-setting');
+  const reduceMotionSetting = document.getElementById('reduce-motion-setting');
+  const controllerStatus = document.getElementById('settings-controller-status');
   let toastTimer, activeFilter='All', selectedGame=null, database=null;
   const favorites = new Set(JSON.parse(localStorage.getItem('rp-xbox-favorites') || '[]'));
 
@@ -226,6 +232,56 @@
     localStorage.setItem('rp-xbox-favorites',JSON.stringify([...favorites]));updateFavoriteButton();render();
   });
   dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
+
+  function applyDisplayPreferences(){
+    document.body.classList.toggle('large-interface',largeInterfaceSetting.checked);
+    document.body.classList.toggle('reduce-motion',reduceMotionSetting.checked);
+    localStorage.setItem('rp-xbox-large-interface',String(largeInterfaceSetting.checked));
+    localStorage.setItem('rp-xbox-reduce-motion',String(reduceMotionSetting.checked));
+  }
+  function syncFullscreenState(){
+    const active=!!document.fullscreenElement||document.body.classList.contains('tv-mode-fallback');
+    tvModeButton.setAttribute('aria-pressed',String(active));
+    tvModeButton.classList.toggle('is-active',active);
+    settingsFullscreenButton.querySelector('.setting-arrow').textContent=active?'↙':'↗';
+  }
+  async function toggleTvMode(){
+    try{
+      if(document.fullscreenElement){await document.exitFullscreen();document.body.classList.remove('tv-mode-fallback');notify('Fullscreen mode off.')}
+      else if(document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen();document.body.classList.remove('tv-mode-fallback');notify('TV mode enabled.')}
+      else{document.body.classList.toggle('tv-mode-fallback');notify(document.body.classList.contains('tv-mode-fallback')?'TV layout enabled.':'TV layout disabled.')}
+    }catch(error){document.body.classList.toggle('tv-mode-fallback');notify(document.body.classList.contains('tv-mode-fallback')?'TV layout enabled. Fullscreen is unavailable here.':'TV layout disabled.')}
+    syncFullscreenState();
+  }
+  async function refreshSettingsStats(){
+    try{const entries=database?await readGames():[];document.getElementById('settings-game-count').textContent=String(entries.length)}
+    catch(error){document.getElementById('settings-game-count').textContent='Unavailable'}
+    if(navigator.storage&&navigator.storage.estimate){
+      try{const estimate=await navigator.storage.estimate(),used=estimate.usage||0,quota=estimate.quota||0;
+        const format=bytes=>bytes<1024*1024?(bytes/1024).toFixed(0)+' KB':(bytes/(1024*1024)).toFixed(1)+' MB';
+        document.getElementById('settings-storage-used').textContent=quota?format(used)+' / '+format(quota):format(used);
+      }catch(error){document.getElementById('settings-storage-used').textContent='Unavailable'}
+    }else document.getElementById('settings-storage-used').textContent='Not supported';
+  }
+  function openSettings(){
+    largeInterfaceSetting.checked=localStorage.getItem('rp-xbox-large-interface')==='true';
+    reduceMotionSetting.checked=localStorage.getItem('rp-xbox-reduce-motion')==='true';
+    applyDisplayPreferences();refreshSettingsStats();settingsDialog.showModal();document.getElementById('settings-close').focus();
+  }
+  document.getElementById('open-settings').addEventListener('click',openSettings);
+  document.getElementById('settings-close').addEventListener('click',()=>settingsDialog.close());
+  document.getElementById('settings-done').addEventListener('click',()=>settingsDialog.close());
+  tvModeButton.addEventListener('click',toggleTvMode);
+  settingsFullscreenButton.addEventListener('click',toggleTvMode);
+  largeInterfaceSetting.addEventListener('change',applyDisplayPreferences);
+  reduceMotionSetting.addEventListener('change',applyDisplayPreferences);
+  settingsDialog.addEventListener('click',event=>{if(event.target===settingsDialog)settingsDialog.close()});
+  document.addEventListener('fullscreenchange',syncFullscreenState);
+  window.addEventListener('gamepadconnected',event=>{controllerStatus.textContent='Connected: '+event.gamepad.id});
+  window.addEventListener('gamepaddisconnected',()=>{controllerStatus.textContent='Waiting for a controller'});
+  largeInterfaceSetting.checked=localStorage.getItem('rp-xbox-large-interface')==='true';
+  reduceMotionSetting.checked=localStorage.getItem('rp-xbox-reduce-motion')==='true';
+  applyDisplayPreferences();
 
   // Controller-friendly focus movement using the browser Gamepad API.
   const selector='button,a[href],input,[tabindex]:not([tabindex="-1"])';

@@ -12,7 +12,7 @@
   <div class="app-shell" id="home-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Retro Player home"><span class="brand-mark">RP</span><span>RETRO <b>PLAYER</b></span><small> XBOX</small></a>
-      <div class="top-meta"><span class="live-dot"></span><span>DEVELOPER MODE</span><span class="profile">K</span></div>
+      <div class="top-actions"><button class="top-action focusable" id="tv-mode-toggle" type="button" aria-pressed="false" title="Toggle fullscreen display">⛶ <span>TV MODE</span></button><button class="top-action focusable" id="open-settings" type="button" aria-haspopup="dialog">⚙ <span>SETTINGS</span></button><div class="top-meta"><span class="live-dot"></span><span>DEVELOPER MODE</span><span class="profile">K</span></div></div>
     </header>
     <main>
       <section class="hero" aria-labelledby="hero-title">
@@ -105,6 +105,22 @@
     <div class="dialog-meta" id="dialog-meta"></div>
     <div class="dialog-actions"><button class="primary-btn focusable" id="launch-game">Import a game <span>→</span></button><button class="secondary-btn focusable" id="favorite-game">☆ Add to favorites</button></div>
     <p class="dialog-note">This is a sample catalog entry, not a game file. Import your own compatible game image to play it.</p>
+  </dialog>
+  <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title">
+    <div class="settings-header"><div><p class="eyebrow">PERSONALIZE YOUR EXPERIENCE</p><h2 id="settings-title">Settings</h2><p>Make Retro Player feel right on your screen.</p></div><button class="dialog-close focusable" id="settings-close" type="button" aria-label="Close settings">×</button></div>
+    <div class="settings-content">
+      <section class="settings-group" aria-labelledby="display-settings-title"><div class="settings-group-heading"><span class="settings-icon">▣</span><div><h3 id="display-settings-title">Display</h3><p>Choose how the interface appears.</p></div></div>
+        <label class="setting-row"><span><strong>Large interface</strong><small>Increase spacing and text for TV viewing.</small></span><input id="large-interface-setting" type="checkbox" class="setting-switch"></label>
+        <label class="setting-row"><span><strong>Reduce motion</strong><small>Limit animated transitions and scrolling.</small></span><input id="reduce-motion-setting" type="checkbox" class="setting-switch"></label>
+        <button class="setting-button focusable" id="settings-fullscreen" type="button"><span><strong>Fullscreen / TV mode</strong><small>Expand the app to fill the available screen.</small></span><span class="setting-arrow">↗</span></button>
+      </section>
+      <section class="settings-group" aria-labelledby="library-settings-title"><div class="settings-group-heading"><span class="settings-icon">▤</span><div><h3 id="library-settings-title">Local library</h3><p>Your imported game files stay in this browser's storage.</p></div></div>
+        <div class="settings-stats"><div><span>IMPORTED GAMES</span><strong id="settings-game-count">—</strong></div><div><span>LOCAL STORAGE</span><strong id="settings-storage-used">Checking…</strong></div></div>
+        <p class="settings-footnote">Storage figures are browser estimates and may be unavailable in some environments.</p>
+      </section>
+      <section class="settings-group"><div class="settings-group-heading"><span class="settings-icon">⌘</span><div><h3>Controller</h3><p>Navigate with the D-pad or left stick. A selects and B goes back.</p></div></div><div class="controller-status"><span class="live-dot"></span><span id="settings-controller-status">Waiting for a controller</span></div></section>
+    </div>
+    <div class="settings-footer"><span>RETRO PLAYER XBOX · BUILD 0.4.0</span><button class="secondary-btn focusable" id="settings-done" type="button">Done</button></div>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>

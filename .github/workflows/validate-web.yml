@@ -1,0 +1,23 @@
+name: Web client validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "feature/**"]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: node --check app.js
+      - name: Verify required settings elements
+        run: |
+          node -e "const fs=require('fs'); const html=fs.readFileSync('index.html','utf8'); const ids=['settings-dialog','open-settings','tv-mode-toggle','large-interface-setting','reduce-motion-setting','settings-game-count','settings-storage-used']; for (const id of ids) { if (!html.includes('id=\"'+id+'\"')) throw new Error('Missing required element: '+id); }"

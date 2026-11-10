@@ -11,7 +11,7 @@ The first native host is a UWP app targeting the Windows.Xbox device family. It 
 The shell:
 - loads the Retro Player Xbox web library from the separately deployed Vercel project;
 - restricts top-level navigation to the Xbox UI site and the existing Retro Player site;
-- polls the native UWP Gamepad API and forwards D-pad, A, and B to the current web page;
+- polls the native UWP Gamepad API and forwards D-pad, left-stick navigation, A/B/X/Y, bumpers, and trigger-press actions to the dashboard;
 - keeps web UI and emulator runtime code separate from the native host.
 
 ## Web library and emulator runtime
@@ -23,10 +23,11 @@ The library's initial launch action hands off to the existing EmulatorJS-based p
 
 ## Controller
 
-- D-pad: move focus.
-- A: activate focused item.
-- B: close a dialog or return from the emulator website to the library.
-- The native shell forwards controller input even when the existing player website is open.
+- D-pad and left stick: move dashboard focus, with a dead zone and paced repeat.
+- A: activate the focused control; B: close the active dialog or clear focus.
+- X: activate the favorite action when a game details dialog is open; Y: close that dialog.
+- LB/RB and LT/RT are detected and forwarded as native actions for future bindings.
+- On Xbox, the native shell owns dashboard navigation; the browser Gamepad API is not also used for dashboard input, avoiding duplicate activation. During emulation, native dashboard forwarding is intentionally not injected so the emulator can receive the browser's own gamepad input.
 
 ## Emulator integration boundary
 

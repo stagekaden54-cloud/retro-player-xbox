@@ -28,7 +28,7 @@
   const largeInterfaceSetting = document.getElementById('large-interface-setting');
   const reduceMotionSetting = document.getElementById('reduce-motion-setting');
   const controllerStatus = document.getElementById('settings-controller-status');
-  let toastTimer, activeFilter='All', selectedGame=null, database=null;
+  let toastTimer, activeFilter='All', personalFilter='All', selectedGame=null, database=null;
   const favorites = new Set(JSON.parse(localStorage.getItem('rp-xbox-favorites') || '[]'));
 
   function notify(message){
@@ -97,25 +97,44 @@
         if(sort==='played')return (b.lastPlayed||0)-(a.lastPlayed||0);
         return (b.addedAt||0)-(a.addedAt||0);
       });
-      const visible=sorted.filter(entry=>(entry.title+' '+entry.fileName).toLowerCase().includes(term));
+      const visible=sorted.filter(entry=>(entry.title+' '+entry.fileName).toLowerCase().includes(term)&&(personalFilter==='All'||entry.favorite===true));
       personalGrid.innerHTML=visible.map(entry=>`<article class="personal-game-card">
         <div class="personal-game-art"><span>PS</span><small>PLAYSTATION</small></div>
-        <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.fileName)} · ${formatSize(entry.size)}</p><span class="game-badges"><span>PS1 IMAGE</span><span>ON THIS DEVICE</span></span></div>
-        <div class="personal-game-actions"><button class="primary-btn focusable" data-play="${entry.id}">▶ Play</button><button class="secondary-btn focusable" data-remove="${entry.id}" aria-label="Remove ${escapeHtml(entry.title)}">Remove</button></div>
+        <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.fileName)} · ${formatSize(entry.size)}</p><span class="game-badges"><span>PS1 IMAGE</span><span>ON THIS DEVICE</span>${entry.favorite?'<span>★ FAVORITE</span>':''}</span></div>
+        <div class="personal-game-actions"><button class="primary-btn focusable" data-play="${entry.id}">▶ Play</button><button class="secondary-btn focusable" data-toggle-favorite="${entry.id}" aria-label="${entry.favorite?'Remove':'Add'} ${escapeHtml(entry.title)} ${entry.favorite?'from':'to'} favorites">${entry.favorite?'★ Saved':'☆ Favorite'}</button><button class="secondary-btn focusable" data-remove="${entry.id}" aria-label="Remove ${escapeHtml(entry.title)}">Remove</button></div>
       </article>`).join('');
-      emptyLibrary.hidden=entries.length!==0;
-      personalNoResults.hidden=entries.length===0||visible.length!==0;
+      emptyLibrary.hidden=entries.length!==0||personalFilter!=='All';
+      personalNoResults.hidden=visible.length!==0;
       personalGrid.querySelectorAll('[data-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.play)));
       personalGrid.querySelectorAll('[data-remove]').forEach(button=>button.addEventListener('click',()=>deleteSavedGame(button.dataset.remove)));
+      personalGrid.querySelectorAll('[data-toggle-favorite]').forEach(button=>button.addEventListener('click',()=>togglePersonalFavorite(button.dataset.toggleFavorite)));
       const recent=entries.filter(entry=>entry.lastPlayed).sort((a,b)=>b.lastPlayed-a.lastPlayed).slice(0,4);
       recentGrid.innerHTML=recent.map(entry=>`<article class="personal-game-card recent-game-card">
         <div class="personal-game-art"><span>PS</span><small>PLAYSTATION</small></div>
-        <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>Last played ${new Date(entry.lastPlayed).toLocaleString()} · ${entry.playCount||1} session${(entry.playCount||1)===1?'':'s'}</p><span class="game-badges"><span>RECENTLY PLAYED</span></span></div>
+        <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>Last played ${new Date(entry.lastPlayed).toLocaleString()} · ${entry.playCount||1} session${(entry.playCount||1)===1?'':'s'}</p><span class="game-badges"><span>RECENTLY PLAYED</span>${entry.favorite?'<span>★ FAVORITE</span>':''}</span></div>
         <div class="personal-game-actions"><button class="primary-btn focusable" data-recent-play="${entry.id}">▶ Resume</button></div>
       </article>`).join('');
       recentEmpty.hidden=recent.length!==0;
       recentGrid.querySelectorAll('[data-recent-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.recentPlay)));
+      const favoriteCount=entries.filter(entry=>entry.favorite).length;
+      document.getElementById('dashboard-game-count').textContent=String(entries.length);
+      document.getElementById('dashboard-recent-count').textContent=String(entries.filter(entry=>entry.lastPlayed).length);
+      document.getElementById('dashboard-favorite-count').textContent=String(favoriteCount);
+      const featured=[...entries].sort((a,b)=>(b.lastPlayed||b.addedAt||0)-(a.lastPlayed||a.addedAt||0))[0];
+      document.getElementById('featured-game-title').textContent=featured?featured.title:'Your next adventure starts here';
+      document.getElementById('featured-game-meta').textContent=featured?(featured.lastPlayed?'Recently played · '+formatSize(featured.size):'Recently added · '+formatSize(featured.size)):'Import a compatible game to get started';
+      document.getElementById('featured-game-subtitle').textContent=featured?'Ready to jump back into your collection? Your games stay saved on this device.':'Your retro collection, organized in one controller-first place.';
     }catch(error){notify(error.message)}
+  }
+  async function togglePersonalFavorite(id){
+    try{
+      const entry=await readGame(id);
+      if(!entry)return;
+      entry.favorite=!entry.favorite;
+      await storeGame(entry);
+      await renderPersonalLibrary();
+      notify(entry.favorite?'Added to favorites.':'Removed from favorites.');
+    }catch(error){notify('Could not update favorite: '+error.message)}
   }
   function escapeHtml(value){
     return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -214,6 +233,13 @@
   document.querySelector('[data-action="library"]').addEventListener('click',()=>document.getElementById('my-library').scrollIntoView({behavior:'smooth'}));
   search.addEventListener('input',render);
   personalSearch.addEventListener('input',renderPersonalLibrary);
+  document.querySelectorAll('[data-library-filter]').forEach(button=>button.addEventListener('click',()=>{
+    personalFilter=button.dataset.libraryFilter;
+    document.querySelectorAll('[data-library-filter]').forEach(item=>{const active=item.dataset.libraryFilter===personalFilter;item.classList.toggle('active',active);item.setAttribute('aria-pressed',String(active))});
+    renderPersonalLibrary();
+  }));
+  document.querySelectorAll('[data-scroll]').forEach(button=>button.addEventListener('click',()=>document.getElementById(button.dataset.scroll).scrollIntoView({behavior:'smooth'})));
+  document.getElementById('hero-import-game').addEventListener('click',()=>fileInput.click());
   personalSort.addEventListener('change',renderPersonalLibrary);
   document.getElementById('import-game').addEventListener('click',()=>fileInput.click());
   fileInput.addEventListener('change',async event=>{

@@ -53,6 +53,7 @@
         </div>
         <div class="no-results panel" id="personal-no-results" hidden><strong>No matching games</strong><p>Try another title or filename.</p></div>
         <div class="personal-game-grid" id="personal-game-grid" aria-live="polite"></div>
+        <button class="secondary-btn focusable load-more-games" id="personal-load-more" type="button" hidden>Load more games</button>
         <div class="empty-library panel" id="empty-library"><strong>Your library is empty</strong><p>Choose Import game to add a compatible PlayStation game image.</p></div>
       </section>
 
@@ -106,7 +107,16 @@
       <button class="secondary-btn focusable" id="exit-emulator">← Back to library</button>
       <div><span class="live-dot"></span> <span id="emulator-system">PLAYSTATION</span></div>
       <span class="emulator-game-title" id="emulator-game-title">Loading game…</span>
+      <button class="secondary-btn focusable" id="perf-toggle" type="button" aria-expanded="false" aria-controls="performance-panel" aria-pressed="false">Performance</button>
     </header>
+    <aside class="performance-panel" id="performance-panel" hidden aria-label="Performance monitor">
+      <div class="performance-heading"><strong>Runtime monitor</strong><span>LIVE</span></div>
+      <div class="performance-metric"><span>Display cadence</span><strong id="perf-fps">Measuring…</strong></div>
+      <div class="performance-metric"><span>Core initialization</span><strong id="perf-core">Waiting for loader…</strong></div>
+      <div class="performance-metric"><span>Memory estimate</span><strong id="perf-memory">Checking…</strong></div>
+      <div class="performance-metric"><span>Active system</span><strong id="perf-system">PlayStation · EmulatorJS</strong></div>
+      <p>Cadence is sampled only while this panel is open. It is not the emulator core's internal FPS. Memory is shown only when the browser exposes a JavaScript heap estimate.</p>
+    </aside>
     <div class="emulator-screen" id="emulator-screen"></div>
     <p class="emulator-help" id="emulator-status">Starting emulator…</p>
   </section>
@@ -134,7 +144,7 @@
       </section>
       <section class="settings-group"><div class="settings-group-heading"><span class="settings-icon">⌘</span><div><h3>Controller</h3><p>Navigate with the D-pad or left stick. A selects and B goes back.</p></div></div><div class="controller-status"><span class="live-dot"></span><span id="settings-controller-status">Waiting for a controller</span></div></section>
     </div>
-    <div class="settings-footer"><span>RETRO PLAYER XBOX · BUILD 0.4.0</span><button class="secondary-btn focusable" id="settings-done" type="button">Done</button></div>
+    <div class="settings-footer"><span>RETRO PLAYER XBOX · BUILD 0.6.0</span><button class="secondary-btn focusable" id="settings-done" type="button">Done</button></div>
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>

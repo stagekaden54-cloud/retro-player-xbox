@@ -41,11 +41,11 @@
 
       <section class="section" id="my-library">
         <div class="section-heading">
-          <div><p class="eyebrow">YOUR PERSONAL COLLECTION</p><h2>My games</h2><p class="section-description">Import a PlayStation game image. Your library is saved on this device.</p></div>
+          <div><p class="eyebrow">YOUR PERSONAL COLLECTION</p><h2>My games</h2><p class="section-description">Import a PlayStation disc image or Nintendo 64 game ROM. Your library is saved on this device.</p></div>
           <button class="primary-btn focusable" id="import-game">＋ Add a game</button>
-          <input id="game-file-input" type="file" accept=".bin,.iso,.img,.pbp,.chd" hidden>
+          <input id="game-file-input" type="file" accept=".bin,.iso,.img,.pbp,.chd,.z64,.n64,.v64" hidden>
         </div>
-        <p class="import-help">Supported file types: BIN, ISO, IMG, PBP and CHD. Multi-file CUE/BIN discs aren't supported in this first version. Only import game files you're authorized to use.</p>
+        <p class="import-help">PS1: BIN, ISO, IMG, PBP and CHD. Nintendo 64: Z64, N64 and V64. Multi-file CUE/BIN discs aren't supported. Only import game files you're authorized to use.</p>
         <div class="library-filter-bar" role="group" aria-label="Filter your library"><button class="library-filter active focusable" data-library-filter="All" aria-pressed="true">All games</button><button class="library-filter focusable" data-library-filter="Favorites" aria-pressed="false">★ Favorites</button></div>
         <div class="library-tools personal-library-tools">
           <label class="search-wrap"><span aria-hidden="true">⌕</span><input id="my-game-search" type="search" placeholder="Search your games…" autocomplete="off" aria-label="Search your imported games"></label>
@@ -86,7 +86,7 @@
       <section class="section systems">
         <div class="section-heading"><div><p class="eyebrow">ONE HOME FOR MANY ERAS</p><h2>Browse systems</h2></div><span class="section-note">PS1 CORE FIRST</span></div>
         <div class="system-grid">
-          <button class="system-card focusable" data-system-filter="Nintendo 64"><span class="system-symbol">N64</span><strong>Nintendo 64</strong><small>PLANNED</small></button>
+          <button class="system-card focusable" data-system-filter="Nintendo 64"><span class="system-symbol">N64</span><strong>Nintendo 64</strong><small>AVAILABLE · TESTING</small></button>
           <button class="system-card focusable" data-system-filter="PlayStation"><span class="system-symbol ps">PS</span><strong>PlayStation</strong><small>AVAILABLE FIRST</small></button>
           <button class="system-card focusable" data-system-filter="Game Boy Advance"><span class="system-symbol gb">GBA</span><strong>Game Boy Advance</strong><small>PLANNED</small></button>
           <button class="system-card focusable" data-system-filter="All"><span class="system-symbol more">···</span><strong>All systems</strong><small>VIEW CATALOG</small></button>
@@ -94,8 +94,8 @@
       </section>
 
       <section class="status-panel panel">
-        <div><p class="eyebrow">PROJECT STATUS</p><h2>PS1 game importing is here.</h2><p>Import and library storage are implemented for supported single-file PlayStation disc images. Actual Xbox hardware testing is still needed.</p></div>
-        <div class="status-tag"><span class="live-dot"></span> PS1 FIRST</div>
+        <div><p class="eyebrow">PROJECT STATUS</p><h2>PS1 + Nintendo 64 emulation.</h2><p>Import and library storage support single-file PlayStation images and Nintendo 64 ROMs. Actual Xbox Series S testing is still needed.</p></div>
+        <div class="status-tag"><span class="live-dot"></span> TWO SYSTEMS</div>
       </section>
     </main>
     <footer><span>RETRO PLAYER XBOX</span><span>DESIGNED FOR CONTROLLER · SERIES S FIRST</span><span>LIBRARY 1.0</span></footer>
@@ -104,7 +104,7 @@
   <section class="emulator-panel" id="emulator-panel" hidden>
     <header class="emulator-topbar">
       <button class="secondary-btn focusable" id="exit-emulator">← Back to library</button>
-      <div><span class="live-dot"></span> PLAYSTATION</div>
+      <div><span class="live-dot"></span> <span id="emulator-system">PLAYSTATION</span></div>
       <span class="emulator-game-title" id="emulator-game-title">Loading game…</span>
     </header>
     <div class="emulator-screen" id="emulator-screen"></div>

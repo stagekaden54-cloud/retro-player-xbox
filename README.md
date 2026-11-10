@@ -4,7 +4,7 @@ A controller-first Xbox Developer Mode client for Retro Player.
 
 ## Project status
 
-**Stage:** Native Xbox UWP shell scaffold + EmulatorJS web handoff (0.4.0)
+**Stage:** EmulatorJS web client with PS1 and Nintendo 64 file-to-core routing (0.5.0)
 
 This repository is separate from the existing Retro Player website. The first target is Xbox Series X|S in Developer Mode.
 
@@ -38,7 +38,9 @@ This repository is separate from the existing Retro Player website. The first ta
 - Game detail dialog and locally saved favorites.
 - Keyboard and browser Gamepad API focus navigation.
 - The native shell hosts the Xbox library in WebView2 and forwards D-pad / A / B from the UWP Gamepad API.
-- The library can hand off to the existing EmulatorJS-based Retro Player website. The handoff is not yet a per-game ROM launch.
+- The web client imports single-file PS1 images (BIN, ISO, IMG, PBP, CHD) and N64 ROM images (Z64, N64, V64) into local IndexedDB storage.
+- Saved games retain their system type and launch with the matching EmulatorJS core (`psx` or `n64`).
+- Existing library entries without a saved system field continue to launch as PlayStation games.
 
 All displayed game entries are sample metadata, not installed content. No ROMs, BIOS files, or copyrighted artwork are included.
 
@@ -50,7 +52,7 @@ The `XboxShell/` folder contains a UWP + WinUI 2 WebView2 host and a GitHub Acti
 
 1. Complete a successful Windows CI build of the signed x64 UWP package.
 2. Install and test the shell on a real Xbox Series S in Developer Mode.
-3. Validate the existing EmulatorJS site inside Xbox WebView2.
-4. Add per-game core mapping and user-selected file access after the runtime checks pass.
+3. Test PS1 and N64 EmulatorJS cores inside Xbox WebView2, including controller input, audio, and save states.
+4. Tune N64 compatibility and performance on the physical console.
 
 See [docs/architecture.md](docs/architecture.md) for the initial design.

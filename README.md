@@ -4,7 +4,7 @@ A controller-first Xbox Developer Mode client for Retro Player.
 
 ## Project status
 
-**Stage:** EmulatorJS web client with PS1 and Nintendo 64 file-to-core routing (0.5.0)
+**Stage:** EmulatorJS web client with PS1 and Nintendo 64 file-to-core routing, paged library, and optional runtime monitor (0.6.0)
 
 This repository is separate from the existing Retro Player website. The first target is Xbox Series X|S in Developer Mode.
 
@@ -31,6 +31,9 @@ This repository is separate from the existing Retro Player website. The first ta
 - Persistent large-interface and reduced-motion preferences.
 
 - Recently played shelf with per-game session counts.
+- Large personal libraries render 24 games at a time, with cached IndexedDB reads and delegated actions.
+- Optional emulator runtime monitor for display-cadence estimates, EmulatorJS core initialization time, and browser-exposed JavaScript heap usage.
+- Native controller actions are batched into one WebView2 message per poll instead of separate script calls for each button.
 - Search and sorting for imported local games (recently added, recently played, title, and file size).
 
 - Responsive, TV-friendly home screen.
@@ -43,6 +46,10 @@ This repository is separate from the existing Retro Player website. The first ta
 - Existing library entries without a saved system field continue to launch as PlayStation games.
 
 All displayed game entries are sample metadata, not installed content. No ROMs, BIOS files, or copyrighted artwork are included.
+
+## Performance update (0.6.0)
+
+See [docs/performance.md](docs/performance.md) for implementation details and the Series X|S benchmark checklist. The runtime monitor is diagnostic only: its display-cadence figure is not EmulatorJS's internal core FPS, and JavaScript heap data is reported only when the browser exposes it. No Xbox performance result is claimed before testing on the console.
 
 ## Native Xbox shell
 

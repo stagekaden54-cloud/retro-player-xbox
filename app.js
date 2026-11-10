@@ -104,7 +104,7 @@
         <div class="personal-game-actions"><button class="primary-btn focusable" data-play="${entry.id}">▶ Play</button><button class="secondary-btn focusable" data-toggle-favorite="${entry.id}" aria-label="${entry.favorite?'Remove':'Add'} ${escapeHtml(entry.title)} ${entry.favorite?'from':'to'} favorites">${entry.favorite?'★ Saved':'☆ Favorite'}</button><button class="secondary-btn focusable" data-remove="${entry.id}" aria-label="Remove ${escapeHtml(entry.title)}">Remove</button></div>
       </article>`).join('');
       emptyLibrary.hidden=entries.length!==0||personalFilter!=='All';
-      personalNoResults.hidden=visible.length!==0;
+      personalNoResults.hidden=entries.length===0||visible.length!==0;
       personalGrid.querySelectorAll('[data-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.play)));
       personalGrid.querySelectorAll('[data-remove]').forEach(button=>button.addEventListener('click',()=>deleteSavedGame(button.dataset.remove)));
       personalGrid.querySelectorAll('[data-toggle-favorite]').forEach(button=>button.addEventListener('click',()=>togglePersonalFavorite(button.dataset.toggleFavorite)));

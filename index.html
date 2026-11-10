@@ -12,27 +12,41 @@
   <div class="app-shell" id="home-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Retro Player home"><span class="brand-mark">RP</span><span>RETRO <b>PLAYER</b></span><small> XBOX</small></a>
-      <div class="top-actions"><button class="top-action focusable" id="tv-mode-toggle" type="button" aria-pressed="false" title="Toggle fullscreen display">⛶ <span>TV MODE</span></button><button class="top-action focusable" id="open-settings" type="button" aria-haspopup="dialog">⚙ <span>SETTINGS</span></button><div class="top-meta"><span class="live-dot"></span><span>DEVELOPER MODE</span><span class="profile">K</span></div></div>
+      <nav class="main-nav" aria-label="Main navigation"><button class="nav-link focusable" data-scroll="my-library">My games</button><button class="nav-link focusable" data-scroll="recently-played">Recently played</button><button class="nav-link focusable" data-scroll="library">Discover</button></nav><div class="top-actions"><button class="top-action focusable" id="tv-mode-toggle" type="button" aria-pressed="false" title="Toggle fullscreen display">⛶ <span>TV MODE</span></button><button class="top-action focusable" id="open-settings" type="button" aria-haspopup="dialog">⚙ <span>SETTINGS</span></button><div class="top-meta"><span class="live-dot"></span><span>DEVELOPER MODE</span><span class="profile">K</span></div></div>
     </header>
     <main>
-      <section class="hero" aria-labelledby="hero-title">
+      <section class="hero dashboard-hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">YOUR CLASSICS. YOUR LIVING ROOM.</p>
-          <h1 id="hero-title">Press play on<br><em>your nostalgia.</em></h1>
-          <p class="hero-sub">A controller-first home for your retro game collection.</p>
-          <button class="primary-btn focusable" data-action="library">Explore library <span>→</span></button>
+          <p class="eyebrow"><span class="live-dot"></span> YOUR COLLECTION · READY WHEN YOU ARE</p>
+          <h1 id="hero-title">Your games.<br><em>Your living room.</em></h1>
+          <p class="hero-sub" id="featured-game-subtitle">Your retro collection, organized in one controller-first place.</p>
+          <div class="hero-actions">
+            <button class="primary-btn focusable" data-action="library">Explore my games <span>→</span></button>
+            <button class="secondary-btn focusable" id="hero-import-game" type="button">＋ Add a game</button>
+          </div>
+          <div class="hero-featured" id="hero-featured">
+            <span class="featured-kicker">FEATURED FROM YOUR LIBRARY</span>
+            <strong id="featured-game-title">Your next adventure starts here</strong>
+            <span id="featured-game-meta">Import a compatible game to get started</span>
+          </div>
         </div>
         <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="disc"><div class="disc-hole"></div><span>RETRO<br>PLAYER</span></div><div class="pixel p1"></div><div class="pixel p2"></div><div class="pixel p3"></div></div>
-        <div class="hero-foot"><span>BUILT FOR THE BIG SCREEN</span><span>01 / HOME</span></div>
+        <div class="hero-foot"><span>BUILT FOR THE BIG SCREEN</span><span>RETRO PLAYER · 1.0</span></div>
+      </section>
+      <section class="dashboard-stats" aria-label="Library overview">
+        <div><span>IN YOUR LIBRARY</span><strong id="dashboard-game-count">0</strong><small>Imported games</small></div>
+        <div><span>RECENT SESSIONS</span><strong id="dashboard-recent-count">0</strong><small>Games played</small></div>
+        <div><span>YOUR FAVORITES</span><strong id="dashboard-favorite-count">0</strong><small>Saved games</small></div>
       </section>
 
       <section class="section" id="my-library">
         <div class="section-heading">
           <div><p class="eyebrow">YOUR PERSONAL COLLECTION</p><h2>My games</h2><p class="section-description">Import a PlayStation game image. Your library is saved on this device.</p></div>
-          <button class="primary-btn focusable" id="import-game">＋ Import game</button>
+          <button class="primary-btn focusable" id="import-game">＋ Add a game</button>
           <input id="game-file-input" type="file" accept=".bin,.iso,.img,.pbp,.chd" hidden>
         </div>
         <p class="import-help">Supported file types: BIN, ISO, IMG, PBP and CHD. Multi-file CUE/BIN discs aren't supported in this first version. Only import game files you're authorized to use.</p>
+        <div class="library-filter-bar" role="group" aria-label="Filter your library"><button class="library-filter active focusable" data-library-filter="All" aria-pressed="true">All games</button><button class="library-filter focusable" data-library-filter="Favorites" aria-pressed="false">★ Favorites</button></div>
         <div class="library-tools personal-library-tools">
           <label class="search-wrap"><span aria-hidden="true">⌕</span><input id="my-game-search" type="search" placeholder="Search your games…" autocomplete="off" aria-label="Search your imported games"></label>
           <label class="sort-wrap"><span>Sort</span><select id="my-game-sort" aria-label="Sort your games"><option value="added">Recently added</option><option value="played">Recently played</option><option value="title">Title A–Z</option><option value="size">Largest file</option></select></label>
@@ -53,7 +67,7 @@
 
       <section class="section" id="library">
         <div class="section-heading">
-          <div><p class="eyebrow">DISCOVER THE CLASSICS</p><h2>Sample catalog</h2><p class="section-description">These are example entries, not installed game files.</p></div>
+          <div><p class="eyebrow">FIND SOMETHING TO PLAY</p><h2>Discover</h2><p class="section-description">Explore the sample catalog. Entries are previews, not installed game files.</p></div>
           <span class="section-note" id="result-count">6 SAMPLE ENTRIES</span>
         </div>
         <div class="library-tools">
@@ -84,7 +98,7 @@
         <div class="status-tag"><span class="live-dot"></span> PS1 FIRST</div>
       </section>
     </main>
-    <footer><span>RETRO PLAYER XBOX</span><span>DESIGNED FOR CONTROLLER · SERIES S FIRST</span><span>BUILD 0.3.0</span></footer>
+    <footer><span>RETRO PLAYER XBOX</span><span>DESIGNED FOR CONTROLLER · SERIES S FIRST</span><span>LIBRARY 1.0</span></footer>
   </div>
 
   <section class="emulator-panel" id="emulator-panel" hidden>

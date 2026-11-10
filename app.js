@@ -13,6 +13,11 @@
   const dialog = document.getElementById('game-dialog');
   const fileInput = document.getElementById('game-file-input');
   const personalGrid = document.getElementById('personal-game-grid');
+  const recentGrid = document.getElementById('recent-game-grid');
+  const recentEmpty = document.getElementById('recent-empty');
+  const personalSearch = document.getElementById('my-game-search');
+  const personalSort = document.getElementById('my-game-sort');
+  const personalNoResults = document.getElementById('personal-no-results');
   const emptyLibrary = document.getElementById('empty-library');
   const homeShell = document.getElementById('home-shell');
   const emulatorPanel = document.getElementById('emulator-panel');
@@ -78,14 +83,32 @@
     if(!database)return;
     try{
       const entries=await readGames();
-      personalGrid.innerHTML=entries.map(entry=>`<article class="personal-game-card">
+      const term=personalSearch.value.trim().toLowerCase();
+      const sort=personalSort.value;
+      const sorted=[...entries].sort((a,b)=>{
+        if(sort==='title')return a.title.localeCompare(b.title);
+        if(sort==='size')return (b.size||0)-(a.size||0);
+        if(sort==='played')return (b.lastPlayed||0)-(a.lastPlayed||0);
+        return (b.addedAt||0)-(a.addedAt||0);
+      });
+      const visible=sorted.filter(entry=>(entry.title+' '+entry.fileName).toLowerCase().includes(term));
+      personalGrid.innerHTML=visible.map(entry=>`<article class="personal-game-card">
         <div class="personal-game-art"><span>PS</span><small>PLAYSTATION</small></div>
         <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.fileName)} · ${formatSize(entry.size)}</p><span class="game-badges"><span>PS1 IMAGE</span><span>ON THIS DEVICE</span></span></div>
         <div class="personal-game-actions"><button class="primary-btn focusable" data-play="${entry.id}">▶ Play</button><button class="secondary-btn focusable" data-remove="${entry.id}" aria-label="Remove ${escapeHtml(entry.title)}">Remove</button></div>
       </article>`).join('');
       emptyLibrary.hidden=entries.length!==0;
+      personalNoResults.hidden=entries.length===0||visible.length!==0;
       personalGrid.querySelectorAll('[data-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.play)));
       personalGrid.querySelectorAll('[data-remove]').forEach(button=>button.addEventListener('click',()=>deleteSavedGame(button.dataset.remove)));
+      const recent=entries.filter(entry=>entry.lastPlayed).sort((a,b)=>b.lastPlayed-a.lastPlayed).slice(0,4);
+      recentGrid.innerHTML=recent.map(entry=>`<article class="personal-game-card recent-game-card">
+        <div class="personal-game-art"><span>PS</span><small>PLAYSTATION</small></div>
+        <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>Last played ${new Date(entry.lastPlayed).toLocaleString()} · ${entry.playCount||1} session${(entry.playCount||1)===1?'':'s'}</p><span class="game-badges"><span>RECENTLY PLAYED</span></span></div>
+        <div class="personal-game-actions"><button class="primary-btn focusable" data-recent-play="${entry.id}">▶ Resume</button></div>
+      </article>`).join('');
+      recentEmpty.hidden=recent.length!==0;
+      recentGrid.querySelectorAll('[data-recent-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.recentPlay)));
     }catch(error){notify(error.message)}
   }
   function escapeHtml(value){
@@ -119,7 +142,9 @@
       const file=new File([entry.blob],entry.fileName,{type:entry.type||'application/octet-stream'});
       startPs1Emulator(file,entry.title);
       entry.lastPlayed=Date.now();
+      entry.playCount=(entry.playCount||0)+1;
       await storeGame(entry);
+      await renderPersonalLibrary();
     }catch(error){notify('Could not open the game: '+(error.message||'Unknown error.'))}
   }
   function startPs1Emulator(file,title){
@@ -182,6 +207,8 @@
   document.querySelectorAll('[data-system-filter]').forEach(btn=>btn.addEventListener('click',()=>setFilter(btn.dataset.systemFilter)));
   document.querySelector('[data-action="library"]').addEventListener('click',()=>document.getElementById('my-library').scrollIntoView({behavior:'smooth'}));
   search.addEventListener('input',render);
+  personalSearch.addEventListener('input',renderPersonalLibrary);
+  personalSort.addEventListener('change',renderPersonalLibrary);
   document.getElementById('import-game').addEventListener('click',()=>fileInput.click());
   fileInput.addEventListener('change',async event=>{
     const file=event.target.files&&event.target.files[0];

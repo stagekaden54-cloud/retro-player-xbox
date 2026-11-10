@@ -31,3 +31,10 @@
 body.emulator-active{overflow:hidden}
 @media(max-width:900px){.personal-game-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.personal-game-card{align-items:flex-start;flex-wrap:wrap}.personal-game-actions{width:100%;flex-direction:row}.personal-game-actions button{flex:1}.emulator-topbar{padding:8px 10px;gap:8px}.emulator-topbar>div{display:none}.emulator-game-title{max-width:45%;font-size:8px}}
+
+.personal-library-tools{margin:18px 0 16px}
+.sort-wrap{display:flex;align-items:center;gap:10px;padding:0 14px;height:46px;border:1px solid var(--line);border-radius:9px;background:#0d1a14;color:var(--muted);font:10px 'DM Mono';letter-spacing:1px}
+.sort-wrap select{min-width:145px;border:0;outline:0;background:transparent;color:#f2f8f2;font:11px Manrope;cursor:pointer}
+.sort-wrap option{background:#101d18;color:#f2f8f2}
+.recent-game-card{border-color:#9bf56b35}
+@media(max-width:760px){.sort-wrap{justify-content:space-between}.sort-wrap select{flex:1}}

@@ -26,6 +26,9 @@ This repository is separate from the existing Retro Player website. The first ta
 
 ## Current prototype features
 
+- Recently played shelf with per-game session counts.
+- Search and sorting for imported local games (recently added, recently played, title, and file size).
+
 - Responsive, TV-friendly home screen.
 - Sample catalog with search and Nintendo 64 / PlayStation / Game Boy Advance filters.
 - Game detail dialog and locally saved favorites.

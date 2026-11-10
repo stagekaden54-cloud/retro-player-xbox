@@ -33,8 +33,22 @@
           <input id="game-file-input" type="file" accept=".bin,.iso,.img,.pbp,.chd" hidden>
         </div>
         <p class="import-help">Supported file types: BIN, ISO, IMG, PBP and CHD. Multi-file CUE/BIN discs aren't supported in this first version. Only import game files you're authorized to use.</p>
+        <div class="library-tools personal-library-tools">
+          <label class="search-wrap"><span aria-hidden="true">⌕</span><input id="my-game-search" type="search" placeholder="Search your games…" autocomplete="off" aria-label="Search your imported games"></label>
+          <label class="sort-wrap"><span>Sort</span><select id="my-game-sort" aria-label="Sort your games"><option value="added">Recently added</option><option value="played">Recently played</option><option value="title">Title A–Z</option><option value="size">Largest file</option></select></label>
+        </div>
+        <div class="no-results panel" id="personal-no-results" hidden><strong>No matching games</strong><p>Try another title or filename.</p></div>
         <div class="personal-game-grid" id="personal-game-grid" aria-live="polite"></div>
         <div class="empty-library panel" id="empty-library"><strong>Your library is empty</strong><p>Choose Import game to add a compatible PlayStation game image.</p></div>
+      </section>
+
+      <section class="section" id="recently-played">
+        <div class="section-heading">
+          <div><p class="eyebrow">PICK UP WHERE YOU LEFT OFF</p><h2>Recently played</h2><p class="section-description">Your latest sessions on this device.</p></div>
+          <span class="section-note">LOCAL HISTORY</span>
+        </div>
+        <div class="personal-game-grid" id="recent-game-grid" aria-live="polite"></div>
+        <div class="empty-library panel" id="recent-empty"><strong>No recent games yet</strong><p>Games you launch from My games will appear here.</p></div>
       </section>
 
       <section class="section" id="library">

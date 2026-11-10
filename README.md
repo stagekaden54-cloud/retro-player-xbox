@@ -4,7 +4,7 @@ A controller-first Xbox Developer Mode client for Retro Player.
 
 ## Project status
 
-**Stage:** Native Xbox UWP shell scaffold + EmulatorJS web handoff (0.3.0)
+**Stage:** Native Xbox UWP shell scaffold + EmulatorJS web handoff (0.4.0)
 
 This repository is separate from the existing Retro Player website. The first target is Xbox Series X|S in Developer Mode.
 
@@ -25,6 +25,10 @@ This repository is separate from the existing Retro Player website. The first ta
 - Never commit signing certificates, passwords, tokens, ROMs, BIOS files, or other private material.
 
 ## Current prototype features
+
+- Settings dashboard with display preferences, local library/storage estimates, and controller connection status.
+- Fullscreen TV mode with a layout-only fallback when the host does not support the Fullscreen API.
+- Persistent large-interface and reduced-motion preferences.
 
 - Recently played shelf with per-game session counts.
 - Search and sorting for imported local games (recently added, recently played, title, and file size).

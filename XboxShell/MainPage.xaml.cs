@@ -141,6 +141,8 @@ namespace RetroPlayerXbox
 
             var stagedFile = _pendingImports[token];
             _pendingImports.Remove(token);
+            bool completed = message.StartsWith(completedPrefix, StringComparison.Ordinal);
+            ShellStatus.Text = completed ? "Game imported · Ready to play" : "Game import did not complete";
             try { await stagedFile.DeleteAsync(); }
             catch { /* A leftover staging copy is harmless; the library copy is already independent. */ }
         }

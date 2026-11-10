@@ -98,11 +98,15 @@
         return (b.addedAt||0)-(a.addedAt||0);
       });
       const visible=sorted.filter(entry=>(entry.title+' '+entry.fileName).toLowerCase().includes(term)&&(personalFilter==='All'||entry.favorite===true));
-      personalGrid.innerHTML=visible.map(entry=>{const system=entry.system||'PlayStation';const isN64=system==='Nintendo 64';return `<article class="personal-game-card">
-        <div class="personal-game-art ${isN64?'n64-game-art':''}"><span>${isN64?'N64':'PS'}</span><small>${isN64?'NINTENDO 64':'PLAYSTATION'}</small></div>
-        <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.fileName)} · ${formatSize(entry.size)}</p><span class="game-badges"><span>${isN64?'N64 ROM':'PS1 IMAGE'}</span><span>ON THIS DEVICE</span>${entry.favorite?'<span>★ FAVORITE</span>':''}</span></div>`
-        <div class="personal-game-actions"><button class="primary-btn focusable" data-play="${entry.id}">▶ Play</button><button class="secondary-btn focusable" data-toggle-favorite="${entry.id}" aria-label="${entry.favorite?'Remove':'Add'} ${escapeHtml(entry.title)} ${entry.favorite?'from':'to'} favorites">${entry.favorite?'★ Saved':'☆ Favorite'}</button><button class="secondary-btn focusable" data-remove="${entry.id}" aria-label="Remove ${escapeHtml(entry.title)}">Remove</button></div>
-      </article>`}).join('');
+      personalGrid.innerHTML=visible.map(entry=>{
+        const system=entry.system||'PlayStation';
+        const isN64=system==='Nintendo 64';
+        return `<article class="personal-game-card">
+          <div class="personal-game-art ${isN64?'n64-game-art':''}"><span>${isN64?'N64':'PS'}</span><small>${isN64?'NINTENDO 64':'PLAYSTATION'}</small></div>
+          <div class="personal-game-info"><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.fileName)} · ${formatSize(entry.size)}</p><span class="game-badges"><span>${isN64?'N64 ROM':'PS1 IMAGE'}</span><span>ON THIS DEVICE</span>${entry.favorite?'<span>★ FAVORITE</span>':''}</span></div>
+          <div class="personal-game-actions"><button class="primary-btn focusable" data-play="${entry.id}">▶ Play</button><button class="secondary-btn focusable" data-toggle-favorite="${entry.id}" aria-label="${entry.favorite?'Remove':'Add'} ${escapeHtml(entry.title)} ${entry.favorite?'from':'to'} favorites">${entry.favorite?'★ Saved':'☆ Favorite'}</button><button class="secondary-btn focusable" data-remove="${entry.id}" aria-label="Remove ${escapeHtml(entry.title)}">Remove</button></div>
+        </article>`;
+      }).join('');
       emptyLibrary.hidden=entries.length!==0||personalFilter!=='All';
       personalNoResults.hidden=entries.length===0||visible.length!==0;
       personalGrid.querySelectorAll('[data-play]').forEach(button=>button.addEventListener('click',()=>launchSavedGame(button.dataset.play)));

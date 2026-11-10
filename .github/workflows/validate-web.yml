@@ -21,3 +21,7 @@ jobs:
       - name: Verify required settings elements
         run: |
           node -e "const fs=require('fs'); const html=fs.readFileSync('index.html','utf8'); const ids=['settings-dialog','open-settings','tv-mode-toggle','large-interface-setting','reduce-motion-setting','settings-game-count','settings-storage-used']; for (const id of ids) { if (!html.includes('id=\"'+id+'\"')) throw new Error('Missing required element: '+id); }"
+
+      - name: Verify PS1 and Nintendo 64 emulator mapping
+        run: |
+          node -e "const fs=require('fs'); const app=fs.readFileSync('app.js','utf8'); const required=[\"window.EJS_core=isN64?'n64':'psx'\",\"n64Extensions=['z64','n64','v64']\",\"ps1Extensions=['bin','iso','img','pbp','chd']\"]; for (const item of required) { if (!app.includes(item)) throw new Error('Missing emulator support: '+item); }"

@@ -1,14 +1,25 @@
 # Xbox native shell (UWP)
 
-This folder contains the first native Xbox application host for Retro Player.
+This folder contains the native Xbox application host for Retro Player.
+
+## Native Xbox 0.2.0 upgrades
+
+- Native Xbox toolbar with **Import game**, **Home**, **Reload**, and **About** actions.
+- Native status strip showing shell/network state and controller connection state.
+- Native UWP file picker accepts PS1 images (`.bin`, `.iso`, `.img`, `.pbp`, `.chd`) and Nintendo 64 ROM formats (`.z64`, `.n64`, `.v64`).
+- Selected files are staged temporarily in the app's private local folder, exposed to the hosted interface through a WebView2 virtual-host mapping, imported into the existing IndexedDB library, then removed from the staging folder after the web client acknowledges completion.
+- Native controller polling forwards D-pad, left-stick, A/B/X/Y, shoulder, and trigger input to the interface. The browser Gamepad API remains available for emulator gameplay.
+- The WebView2 navigation allowlist remains restricted to the Retro Player and PS1 Player HTTPS origins.
+- Package and assembly version are now 0.2.0.
 
 ## Architecture
 
 - UWP app targeting the Xbox device family.
 - WinUI 2 WebView2 control hosts the Retro Player Xbox interface.
 - The web UI is loaded from the separately deployed project at https://retro-player-xbox.vercel.app/.
-- Native UWP Gamepad polling forwards D-pad, A, and B actions into the page through the WebView2 scripting API.
-- WebView2 is used rather than the older EdgeHTML WebView. Microsoft announced WebView2 support for Xbox apps in November 2023.
+- Native UWP Gamepad polling forwards controller actions into the page through the WebView2 scripting API.
+- The native file picker uses the system picker permission and copies a selected file into the app-private LocalFolder; it does not request broad filesystem access.
+- WebView2 is used rather than the older EdgeHTML WebView.
 
 ## Build
 
@@ -22,7 +33,9 @@ The signed package is for personal Developer Mode testing only. The certificate 
 
 ## Current limitations
 
-- This is the first native host, not a finished emulator.
-- The app requires an internet connection to load the hosted interface.
-- The emulator launch route is not connected yet. EmulatorJS/WebAssembly/WebGL, audio, file selection, memory, and sustained performance must be tested on a real Series S.
+- This is a native application shell around the hosted web interface, not a native emulator implementation.
+- The app requires an internet connection to load the hosted interface and EmulatorJS runtime.
+- The native file picker and import bridge compile in CI but still require physical Xbox Series S testing.
+- EmulatorJS/WebAssembly/WebGL, audio, file selection, save states, memory use, and sustained performance must be tested on a real console.
+- Controller navigation and gameplay input must be checked with a physical Xbox controller.
 - No ROMs, BIOS files, copyrighted game images, or signing private keys are stored in this repository.

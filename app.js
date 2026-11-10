@@ -148,9 +148,9 @@
     const n64Extensions=['z64','n64','v64'];
     const ps1Extensions=['bin','iso','img','pbp','chd'];
     const system=n64Extensions.includes(extension)?'Nintendo 64':ps1Extensions.includes(extension)?'PlayStation':null;
-    if(!system){notify('Unsupported file. Choose a PS1 image (BIN, ISO, IMG, PBP, CHD) or N64 ROM (Z64, N64, V64).');return}
-    if(file.size===0){notify('That file is empty. Choose a game image file.');return}
-    if(file.size>1024*1024*1024){notify('This version supports files up to 1 GB.');return}
+    if(!system){notify('Unsupported file. Choose a PS1 image (BIN, ISO, IMG, PBP, CHD) or N64 ROM (Z64, N64, V64).');return false}
+    if(file.size===0){notify('That file is empty. Choose a game image file.');return false}
+    if(file.size>1024*1024*1024){notify('This version supports files up to 1 GB.');return false}
     try{
       if(!database)database=await openDatabase();
       if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist();
@@ -158,8 +158,10 @@
       await storeGame({id:safeId(),title,system,fileName:file.name,size:file.size,type:file.type||'application/octet-stream',blob:file,lastPlayed:0,addedAt:Date.now()});
       await renderPersonalLibrary();
       notify('Added '+title+' ('+(system==='Nintendo 64'?'N64':'PS1')+') to My games.');
+      return true;
     }catch(error){
       notify('Could not save the file: '+(error.message||'Storage may be full.'));
+      return false;
     }
   }
   async function deleteSavedGame(id){
@@ -402,6 +404,27 @@
     const key=({ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight'})[action];
     if(key)document.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));
   };
+  // Native UWP file-picker bridge. The shell stages a selected file in its app-local
+  // folder and exposes it through a restricted WebView2 virtual host mapping.
+  if(window.chrome&&window.chrome.webview){
+    window.chrome.webview.addEventListener('message',async event=>{
+      const message=event.data;
+      if(!message||message.type!=='native-import-file')return;
+      let imported=false;
+      try{
+        const response=await fetch(message.url);
+        if(!response.ok)throw new Error('The Xbox shell could not read the selected file.');
+        const blob=await response.blob();
+        const file=new File([blob],message.fileName,{type:'application/octet-stream'});
+        imported=await importGame(file);
+      }catch(error){
+        notify('Native import failed: '+(error.message||'Could not read the selected file.'));
+      }finally{
+        window.chrome.webview.postMessage((imported?'import-complete:':'import-failed:')+message.token);
+      }
+    });
+  }
+
   render();
   openDatabase().then(db=>{database=db;renderPersonalLibrary()}).catch(error=>notify('Local library storage unavailable: '+error.message));
 })();

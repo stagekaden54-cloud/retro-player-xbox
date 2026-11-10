@@ -26,7 +26,7 @@ namespace RetroPlayerXbox
         private Gamepad _activeGamepad;
         private GamepadButtons _previousButtons = GamepadButtons.None;
         private bool _webViewReady;
-        private bool _sendingInput;
+        private bool _controllerTickRunning;
         private bool _previousLeftTrigger;
         private bool _previousRightTrigger;
         private int _lastStickX;
@@ -230,71 +230,89 @@ namespace RetroPlayerXbox
 
         private async void ControllerTimer_Tick(object sender, object e)
         {
-            if (!_webViewReady || PlayerWebView.CoreWebView2 == null || _sendingInput)
+            if (!_webViewReady || PlayerWebView.CoreWebView2 == null || _controllerTickRunning)
                 return;
 
-            var gamepad = Gamepad.Gamepads.FirstOrDefault();
-            if (gamepad == null)
+            _controllerTickRunning = true;
+            try
             {
-                if (_activeGamepad != null)
+                var gamepad = Gamepad.Gamepads.FirstOrDefault();
+                if (gamepad == null)
                 {
-                    _activeGamepad = null;
+                    if (_activeGamepad != null)
+                    {
+                        _activeGamepad = null;
+                        _previousButtons = GamepadButtons.None;
+                        _previousLeftTrigger = false;
+                        _previousRightTrigger = false;
+                        _lastStickX = 0;
+                        _lastStickY = 0;
+                        _lastStickRepeat = DateTime.MinValue;
+                        await ReportControllerStatusAsync();
+                    }
+                    return;
+                }
+
+                if (!ReferenceEquals(_activeGamepad, gamepad))
+                {
+                    _activeGamepad = gamepad;
                     _previousButtons = GamepadButtons.None;
+                    _previousLeftTrigger = false;
+                    _previousRightTrigger = false;
                     _lastStickX = 0;
                     _lastStickY = 0;
                     await ReportControllerStatusAsync();
                 }
-                return;
-            }
 
-            if (!ReferenceEquals(_activeGamepad, gamepad))
+                var reading = gamepad.GetCurrentReading();
+                var current = reading.Buttons;
+                var actions = new List<string>();
+                AddOnPress(actions, current, GamepadButtons.DPadUp, "ArrowUp");
+                AddOnPress(actions, current, GamepadButtons.DPadDown, "ArrowDown");
+                AddOnPress(actions, current, GamepadButtons.DPadLeft, "ArrowLeft");
+                AddOnPress(actions, current, GamepadButtons.DPadRight, "ArrowRight");
+                AddOnPress(actions, current, GamepadButtons.A, "A");
+                AddOnPress(actions, current, GamepadButtons.B, "B");
+                AddOnPress(actions, current, GamepadButtons.X, "X");
+                AddOnPress(actions, current, GamepadButtons.Y, "Y");
+                AddOnPress(actions, current, GamepadButtons.LeftShoulder, "LB");
+                AddOnPress(actions, current, GamepadButtons.RightShoulder, "RB");
+                AddTriggerOnPress(actions, reading.LeftTrigger, "LT");
+                AddTriggerOnPress(actions, reading.RightTrigger, "RT");
+
+                var stickX = Math.Abs(reading.LeftThumbstickX) > 0.55 ? Math.Sign(reading.LeftThumbstickX) : 0;
+                var stickY = Math.Abs(reading.LeftThumbstickY) > 0.55 ? -Math.Sign(reading.LeftThumbstickY) : 0;
+                AddStickDirection(actions, stickX, stickY);
+                _previousButtons = current;
+
+                if (actions.Count > 0)
+                    await SendActionsAsync(actions);
+            }
+            finally
             {
-                _activeGamepad = gamepad;
-                _previousButtons = GamepadButtons.None;
-                await ReportControllerStatusAsync();
+                _controllerTickRunning = false;
             }
-
-            var reading = gamepad.GetCurrentReading();
-            var current = reading.Buttons;
-
-            await SendOnPressAsync(current, GamepadButtons.DPadUp, "ArrowUp");
-            await SendOnPressAsync(current, GamepadButtons.DPadDown, "ArrowDown");
-            await SendOnPressAsync(current, GamepadButtons.DPadLeft, "ArrowLeft");
-            await SendOnPressAsync(current, GamepadButtons.DPadRight, "ArrowRight");
-            await SendOnPressAsync(current, GamepadButtons.A, "A");
-            await SendOnPressAsync(current, GamepadButtons.B, "B");
-            await SendOnPressAsync(current, GamepadButtons.X, "X");
-            await SendOnPressAsync(current, GamepadButtons.Y, "Y");
-            await SendOnPressAsync(current, GamepadButtons.LeftShoulder, "LB");
-            await SendOnPressAsync(current, GamepadButtons.RightShoulder, "RB");
-            await SendTriggerOnPressAsync(reading.LeftTrigger, "LT");
-            await SendTriggerOnPressAsync(reading.RightTrigger, "RT");
-
-            var stickX = Math.Abs(reading.LeftThumbstickX) > 0.55 ? Math.Sign(reading.LeftThumbstickX) : 0;
-            var stickY = Math.Abs(reading.LeftThumbstickY) > 0.55 ? -Math.Sign(reading.LeftThumbstickY) : 0;
-            await SendStickDirectionAsync(stickX, stickY);
-            _previousButtons = current;
         }
 
-        private async Task SendOnPressAsync(GamepadButtons current, GamepadButtons button, string action)
+        private void AddOnPress(List<string> actions, GamepadButtons current, GamepadButtons button, string action)
         {
             bool isPressed = (current & button) == button;
             bool wasPressed = (_previousButtons & button) == button;
             if (isPressed && !wasPressed)
-                await SendActionAsync(action);
+                actions.Add(action);
         }
 
-        private async Task SendTriggerOnPressAsync(double value, string action)
+        private void AddTriggerOnPress(List<string> actions, double value, string action)
         {
             bool isPressed = value > 0.65;
             bool wasPressed = action == "LT" ? _previousLeftTrigger : _previousRightTrigger;
             if (isPressed && !wasPressed)
-                await SendActionAsync(action);
+                actions.Add(action);
             if (action == "LT") _previousLeftTrigger = isPressed;
             else _previousRightTrigger = isPressed;
         }
 
-        private async Task SendStickDirectionAsync(int x, int y)
+        private void AddStickDirection(List<string> actions, int x, int y)
         {
             if (x == 0 && y == 0)
             {
@@ -311,28 +329,24 @@ namespace RetroPlayerXbox
                 _lastStickX = x;
                 _lastStickY = y;
                 _lastStickRepeat = now;
-                if (y < 0) await SendActionAsync("ArrowUp");
-                else if (y > 0) await SendActionAsync("ArrowDown");
-                if (x < 0) await SendActionAsync("ArrowLeft");
-                else if (x > 0) await SendActionAsync("ArrowRight");
+                if (y < 0) actions.Add("ArrowUp");
+                else if (y > 0) actions.Add("ArrowDown");
+                if (x < 0) actions.Add("ArrowLeft");
+                else if (x > 0) actions.Add("ArrowRight");
             }
         }
 
-        private async Task SendActionAsync(string action)
+        private async Task SendActionsAsync(List<string> actions)
         {
-            if (PlayerWebView.CoreWebView2 == null)
+            if (PlayerWebView.CoreWebView2 == null || actions == null || actions.Count == 0)
                 return;
-            _sendingInput = true;
-            try
-            {
-                var safeAction = action.Replace("\\", "").Replace("'", "");
-                await PlayerWebView.CoreWebView2.ExecuteScriptAsync(
-                    "window.RetroPlayerNativeInput && window.RetroPlayerNativeInput('" + safeAction + "');");
-            }
-            finally
-            {
-                _sendingInput = false;
-            }
+
+            var jsonActions = new JsonArray();
+            foreach (var action in actions)
+                jsonActions.Add(JsonValue.CreateStringValue(action));
+
+            await PlayerWebView.CoreWebView2.ExecuteScriptAsync(
+                "window.RetroPlayerNativeInputBatch && window.RetroPlayerNativeInputBatch(" + jsonActions.ToString() + ");");
         }
 
         private async Task ReportControllerStatusAsync()

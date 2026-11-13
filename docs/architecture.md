@@ -56,10 +56,12 @@ Do not assume a file picker or emulator core works on Xbox until tested on the a
 - This is an independent project and is not affiliated with Microsoft.
 
 
-## Original Xbox / xemu companion
+## Original Xbox / xemu-uwp handoff
 
-The dashboard includes an informational xemu assistant. It links to the official xemu requirements, compatibility list, and source repository, and stores a PC-readiness checklist locally.
+Original Xbox emulation runs in a separate UWP app: [xemu-uwp](https://github.com/skitzellez/xemu-uwp), an unofficial Xbox Dev Mode port. Retro Player does not embed or redistribute it.
 
-This is not an Original Xbox emulator integration. The official xemu project currently documents Windows, macOS, and Linux support and an OpenGL 4.0 GPU requirement. The Xbox client is a Windows.Xbox UWP AppContainer host around WebView2; it does not currently provide a supported way to launch xemu as a native process. The assistant does not install xemu, import original Xbox images, connect to a PC, or stream gameplay.
+The native shell opens a UWP file picker for `.iso` / `.xiso` images, checks that the selected path belongs to a removable-storage root, and calls the port's documented `xemu:?disc=<escaped path>&launchOnExit=<uri>` protocol. The return URI is `retroplayerxbox:resume`, registered in the Retro Player package manifest and handled by `App.OnActivated`.
 
-See [xemu-companion.md](xemu-companion.md) for details and possible future paths.
+The package requests the narrower UWP `removableStorage` capability with file-type associations for `.iso` and `.xiso`; it does not request broad filesystem access. The game image is not copied into Retro Player's app-private storage because xemu is a separate AppContainer and cannot read that private copy. PS1/N64 imports continue using the existing staged-file bridge.
+
+This first handoff launches a selected image; it does not yet add Xbox games to the persistent IndexedDB library, scrape Xbox metadata/artwork, or implement an in-process emulator. It must be tested on a physical Series S, including USB path access and return activation.

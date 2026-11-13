@@ -31,6 +31,26 @@ namespace RetroPlayerXbox
             Window.Current.Activate();
         }
 
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            if (args.Kind != ActivationKind.Protocol)
+                return;
+
+            Frame rootFrame = Window.Current.Content as Frame;
+            if (rootFrame == null)
+            {
+                rootFrame = new Frame();
+                rootFrame.NavigationFailed += (sender, eventArgs) =>
+                    throw new Exception("Failed to load page: " + eventArgs.SourcePageType.FullName);
+                Window.Current.Content = rootFrame;
+            }
+
+            if (rootFrame.Content == null)
+                rootFrame.Navigate(typeof(MainPage));
+
+            Window.Current.Activate();
+        }
+
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();

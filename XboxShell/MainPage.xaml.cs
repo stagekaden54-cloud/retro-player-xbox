@@ -128,6 +128,44 @@ namespace RetroPlayerXbox
             if (String.IsNullOrWhiteSpace(message))
                 return;
 
+            if (String.Equals(message, "launch-xemu-game", StringComparison.Ordinal))
+            {
+                if (!IsTrustedDashboardSource(args.Source))
+                {
+                    ShellStatus.Text = "Blocked untrusted Original Xbox launch request";
+                    return;
+                }
+
+                await LaunchOriginalXboxGameAsync();
+                return;
+            }
+
+            const string externalPrefix = "open-external:";
+            if (message.StartsWith(externalPrefix, StringComparison.Ordinal))
+            {
+                var target = message.Substring(externalPrefix.Length);
+                if (!Uri.TryCreate(target, UriKind.Absolute, out var externalUri) ||
+                    externalUri.Scheme != Uri.UriSchemeHttps ||
+                    !IsAllowedExternalUri(externalUri))
+                {
+                    ShellStatus.Text = "Blocked unapproved external link";
+                    return;
+                }
+
+                try
+                {
+                    var launched = await Windows.System.Launcher.LaunchUriAsync(externalUri);
+                    ShellStatus.Text = launched
+                        ? "Opened official xemu resource"
+                        : "No browser is available for this xemu resource";
+                }
+                catch
+                {
+                    ShellStatus.Text = "Could not open the xemu resource";
+                }
+                return;
+            }
+
             const string completedPrefix = "import-complete:";
             const string failedPrefix = "import-failed:";
             string token = message.StartsWith(completedPrefix, StringComparison.Ordinal)
@@ -145,6 +183,101 @@ namespace RetroPlayerXbox
             ShellStatus.Text = completed ? "Game imported · Ready to play" : "Game import did not complete";
             try { await stagedFile.DeleteAsync(); }
             catch { /* A leftover staging copy is harmless; the library copy is already independent. */ }
+        }
+
+        private static bool IsAllowedExternalUri(Uri uri)
+        {
+            if (uri == null || uri.Scheme != Uri.UriSchemeHttps)
+                return false;
+            if (String.Equals(uri.Host, "xemu.app", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (!String.Equals(uri.Host, "github.com", StringComparison.OrdinalIgnoreCase))
+                return false;
+            var approvedRepositories = new[] { "/xemu-project/xemu", "/skitzellez/xemu-uwp" };
+            return approvedRepositories.Any(path =>
+                String.Equals(uri.AbsolutePath, path, StringComparison.OrdinalIgnoreCase) ||
+                uri.AbsolutePath.StartsWith(path + "/", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool IsTrustedDashboardSource(string source)
+        {
+            return Uri.TryCreate(source, UriKind.Absolute, out var uri) &&
+                uri.Scheme == Uri.UriSchemeHttps &&
+                String.Equals(uri.Host, "retro-player-xbox.vercel.app", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static async Task<bool> IsOnRemovableStorageAsync(string filePath)
+        {
+            if (String.IsNullOrWhiteSpace(filePath))
+                return false;
+            try
+            {
+                var removableRoots = await KnownFolders.RemovableDevices.GetFoldersAsync();
+                var fullPath = System.IO.Path.GetFullPath(filePath);
+                return removableRoots.Any(root =>
+                {
+                    var rootPath = root.Path.TrimEnd('\\', '/') + "\\";
+                    return fullPath.StartsWith(rootPath, StringComparison.OrdinalIgnoreCase);
+                });
+            }
+            catch { return false; }
+        }
+
+        private async Task LaunchOriginalXboxGameAsync()
+        {
+            try
+            {
+                var picker = new FileOpenPicker
+                {
+                    ViewMode = PickerViewMode.List,
+                    SuggestedStartLocation = PickerLocationId.ComputerFolder
+                };
+                picker.FileTypeFilter.Add(".iso");
+                picker.FileTypeFilter.Add(".xiso");
+                var selectedFile = await picker.PickSingleFileAsync();
+                if (selectedFile == null)
+                {
+                    ShellStatus.Text = "Original Xbox launch cancelled";
+                    return;
+                }
+
+                var extension = System.IO.Path.GetExtension(selectedFile.Name);
+                if (!String.Equals(extension, ".iso", StringComparison.OrdinalIgnoreCase) &&
+                    !String.Equals(extension, ".xiso", StringComparison.OrdinalIgnoreCase))
+                {
+                    await new MessageDialog("Choose an Original Xbox .iso or .xiso image.", "Original Xbox").ShowAsync();
+                    return;
+                }
+
+                if (!await IsOnRemovableStorageAsync(selectedFile.Path))
+                {
+                    await new MessageDialog(
+                        "Keep the Original Xbox .iso or .xiso on a USB drive visible to both apps, then select it here.",
+                        "USB game image required").ShowAsync();
+                    return;
+                }
+
+                const string returnUri = "retroplayerxbox:resume";
+                var launchUriText = "xemu:?disc=" + Uri.EscapeDataString(selectedFile.Path) +
+                    "&launchOnExit=" + Uri.EscapeDataString(returnUri);
+                ShellStatus.Text = "Opening xemu for " + selectedFile.Name + "…";
+                var launched = await Windows.System.Launcher.LaunchUriAsync(new Uri(launchUriText, UriKind.Absolute));
+                if (!launched)
+                {
+                    ShellStatus.Text = "xemu UWP is not installed";
+                    await new MessageDialog(
+                        "The xemu UWP app was not found. Install the separate xemu for Xbox Dev Mode package, then try again.",
+                        "Install xemu UWP").ShowAsync();
+                    return;
+                }
+                ShellStatus.Text = "Launching Original Xbox game in xemu…";
+            }
+            catch (Exception ex)
+            {
+                ShellStatus.Text = "Could not launch xemu";
+                await new MessageDialog("Retro Player could not hand the selected disc image to xemu. " + ex.Message,
+                    "Original Xbox launch").ShowAsync();
+            }
         }
 
         private async void ImportGame_Click(object sender, RoutedEventArgs e)

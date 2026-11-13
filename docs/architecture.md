@@ -54,3 +54,14 @@ Do not assume a file picker or emulator core works on Xbox until tested on the a
 - The CI workflow generates a temporary development signing certificate for the package; only the public certificate is included in the artifact.
 - Treat imported filenames and metadata as untrusted.
 - This is an independent project and is not affiliated with Microsoft.
+
+
+## Original Xbox / xemu-uwp handoff
+
+Original Xbox emulation runs in a separate UWP app: [xemu-uwp](https://github.com/skitzellez/xemu-uwp), an unofficial Xbox Dev Mode port. Retro Player does not embed or redistribute it.
+
+The native shell opens a UWP file picker for `.iso` / `.xiso` images, checks that the selected path belongs to a removable-storage root, and calls the port's documented `xemu:?disc=<escaped path>&launchOnExit=<uri>` protocol. The return URI is `retroplayerxbox:resume`, registered in the Retro Player package manifest and handled by `App.OnActivated`.
+
+The package requests the narrower UWP `removableStorage` capability with file-type associations for `.iso` and `.xiso`; it does not request broad filesystem access. The game image is not copied into Retro Player's app-private storage because xemu is a separate AppContainer and cannot read that private copy. PS1/N64 imports continue using the existing staged-file bridge.
+
+This first handoff launches a selected image; it does not yet add Xbox games to the persistent IndexedDB library, scrape Xbox metadata/artwork, or implement an in-process emulator. It must be tested on a physical Series S, including USB path access and return activation.

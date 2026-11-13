@@ -26,7 +26,23 @@
         <uap:DefaultTile />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+      <Extensions>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="original-xbox-disc">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.iso</uap:FileType>
+              <uap:FileType>.xiso</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="retroplayerxbox" />
+        </uap:Extension>
+      </Extensions>
     </Application>
   </Applications>
-  <Capabilities><Capability Name="internetClient" /></Capabilities>
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <uap:Capability Name="removableStorage" />
+  </Capabilities>
 </Package>

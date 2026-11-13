@@ -11,6 +11,7 @@
   const grid = document.getElementById('game-grid');
   const search = document.getElementById('game-search');
   const dialog = document.getElementById('game-dialog');
+  const xemuDialog = document.getElementById('xemu-dialog');
   const fileInput = document.getElementById('game-file-input');
   const personalGrid = document.getElementById('personal-game-grid');
   const recentGrid = document.getElementById('recent-game-grid');
@@ -392,6 +393,35 @@
   });
   dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
 
+  // The native UWP shell picks a USB disc image and launches the separately installed xemu-uwp app.
+  document.getElementById('launch-xemu-game').addEventListener('click',()=>{
+    if(window.RetroPlayerNativeHost&&window.chrome&&window.chrome.webview){
+      xemuDialog.close();
+      window.chrome.webview.postMessage('launch-xemu-game');
+      return;
+    }
+    notify('Launch Original Xbox games from the Retro Player Xbox app on an Xbox in Developer Mode.');
+  });
+
+  function openXemuResource(rawUrl){
+    let url;
+    try{url=new URL(rawUrl,window.location.href)}catch(error){notify('That xemu resource link is invalid.');return}
+    const approvedRepositories=['/xemu-project/xemu','/skitzellez/xemu-uwp'];
+    const allowed=url.protocol==='https:'&&(
+      url.hostname==='xemu.app'||
+      (url.hostname==='github.com'&&approvedRepositories.some(path=>url.pathname===path||url.pathname.startsWith(path+'/')))
+    );
+    if(!allowed){notify('This external link is not on the approved xemu resource list.');return}
+    if(window.RetroPlayerNativeHost&&window.chrome&&window.chrome.webview){
+      window.chrome.webview.postMessage('open-external:'+url.href);
+      return;
+    }
+    window.open(url.href,'_blank','noopener,noreferrer');
+  }
+  document.querySelectorAll('[data-xemu-link]').forEach(link=>{
+    link.addEventListener('click',event=>{event.preventDefault();openXemuResource(link.href)});
+  });
+
   function applyDisplayPreferences(){
     document.body.classList.toggle('large-interface',largeInterfaceSetting.checked);
     document.body.classList.toggle('reduce-motion',reduceMotionSetting.checked);
@@ -525,6 +555,7 @@
     if(action==='A'){document.activeElement?.click();return}
     if(action==='B'){
       if(dialog.open)dialog.close();
+      else if(xemuDialog.open)xemuDialog.close();
       else if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur();
       return;
     }
@@ -535,6 +566,7 @@
     }
     if(action==='Y'){
       if(dialog.open)dialog.close();
+      else if(xemuDialog.open)xemuDialog.close();
       return;
     }
     const key=({ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight'})[action];

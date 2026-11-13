@@ -439,8 +439,7 @@
       window.chrome.webview.postMessage('open-external:'+url.href);
       return;
     }
-    const opened=window.open(url.href,'_blank','noopener,noreferrer');
-    if(!opened)notify('Your browser blocked the external link. Open xemu.app from a browser to continue.');
+    window.open(url.href,'_blank','noopener,noreferrer');
   }
   document.querySelectorAll('[data-xemu-link]').forEach(link=>{
     link.addEventListener('click',event=>{event.preventDefault();openXemuResource(link.href)});
@@ -579,6 +578,7 @@
     if(action==='A'){document.activeElement?.click();return}
     if(action==='B'){
       if(dialog.open)dialog.close();
+      else if(xemuDialog.open)xemuDialog.close();
       else if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur();
       return;
     }
@@ -589,6 +589,7 @@
     }
     if(action==='Y'){
       if(dialog.open)dialog.close();
+      else if(xemuDialog.open)xemuDialog.close();
       return;
     }
     const key=({ArrowUp:'ArrowUp',ArrowDown:'ArrowDown',ArrowLeft:'ArrowLeft',ArrowRight:'ArrowRight'})[action];

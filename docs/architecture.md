@@ -54,3 +54,12 @@ Do not assume a file picker or emulator core works on Xbox until tested on the a
 - The CI workflow generates a temporary development signing certificate for the package; only the public certificate is included in the artifact.
 - Treat imported filenames and metadata as untrusted.
 - This is an independent project and is not affiliated with Microsoft.
+
+
+## Original Xbox / xemu companion
+
+The dashboard includes an informational xemu assistant. It links to the official xemu requirements, compatibility list, and source repository, and stores a PC-readiness checklist locally.
+
+This is not an Original Xbox emulator integration. The official xemu project currently documents Windows, macOS, and Linux support and an OpenGL 4.0 GPU requirement. The Xbox client is a Windows.Xbox UWP AppContainer host around WebView2; it does not currently provide a supported way to launch xemu as a native process. The assistant does not install xemu, import original Xbox images, connect to a PC, or stream gameplay.
+
+See [xemu-companion.md](xemu-companion.md) for details and possible future paths.

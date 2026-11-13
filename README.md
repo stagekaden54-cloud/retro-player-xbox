@@ -33,7 +33,7 @@ This repository is separate from the existing Retro Player website. The first ta
 - Recently played shelf with per-game session counts.
 - Large personal libraries render 24 games at a time, with cached IndexedDB reads and delegated actions.
 - Optional emulator runtime monitor for display-cadence estimates, EmulatorJS core initialization time, and browser-exposed JavaScript heap usage.
-- Original Xbox xemu companion panel with official resources and a locally saved PC-readiness checklist. This is informational only: xemu is not bundled, launched, or streamed by the Xbox client.
+- Original Xbox launch handoff to the separately installed xemu-uwp app: choose an authorized ISO/XISO on USB, launch through xemu's UWP URI protocol, and return to Retro Player when xemu quits.
 - Native controller actions are batched into one WebView2 message per poll instead of separate script calls for each button.
 - Search and sorting for imported local games (recently added, recently played, title, and file size).
 
@@ -62,5 +62,6 @@ The `XboxShell/` folder contains a UWP + WinUI 2 WebView2 host and a GitHub Acti
 2. Install and test the shell on a real Xbox Series S in Developer Mode.
 3. Test PS1 and N64 EmulatorJS cores inside Xbox WebView2, including controller input, audio, and save states.
 4. Tune N64 compatibility and performance on the physical console.
+5. Test the xemu-uwp URI handoff, removable USB access, return activation, and game-by-game performance on the physical Series S.
 
-See [docs/architecture.md](docs/architecture.md) for the initial design and [docs/xemu-companion.md](docs/xemu-companion.md) for the Original Xbox support boundary.
+See [docs/architecture.md](docs/architecture.md) for the initial design and [docs/xemu-companion.md](docs/xemu-companion.md) for Original Xbox xemu-uwp setup and integration details.

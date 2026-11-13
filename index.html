@@ -91,6 +91,7 @@
           <button class="system-card focusable" data-system-filter="PlayStation"><span class="system-symbol ps">PS</span><strong>PlayStation</strong><small>AVAILABLE FIRST</small></button>
           <button class="system-card focusable" data-system-filter="Game Boy Advance"><span class="system-symbol gb">GBA</span><strong>Game Boy Advance</strong><small>PLANNED</small></button>
           <button class="system-card focusable" data-system-filter="All"><span class="system-symbol more">···</span><strong>All systems</strong><small>VIEW CATALOG</small></button>
+          <button class="system-card xemu-support-card focusable" id="open-xemu-assistant" type="button" aria-haspopup="dialog"><span class="system-symbol xemu">X</span><strong>Original Xbox</strong><small>PC COMPANION · XEMU</small></button>
         </div>
       </section>
 
@@ -129,6 +130,41 @@
     <div class="dialog-meta" id="dialog-meta"></div>
     <div class="dialog-actions"><button class="primary-btn focusable" id="launch-game">Import a game <span>→</span></button><button class="secondary-btn focusable" id="favorite-game">☆ Add to favorites</button></div>
     <p class="dialog-note">This is a sample catalog entry, not a game file. Import your own compatible game image to play it.</p>
+  </dialog>
+  <dialog class="xemu-dialog" id="xemu-dialog" aria-labelledby="xemu-title">
+    <div class="xemu-dialog-header">
+      <button class="dialog-close focusable" id="xemu-close" type="button" aria-label="Close xemu assistant">×</button>
+      <p class="eyebrow">ORIGINAL XBOX · EMULATOR COMPANION</p>
+      <h2 id="xemu-title">xemu setup assistant</h2>
+      <p>Retro Player's guide to preparing a separate PC installation of the open-source original Xbox emulator.</p>
+    </div>
+    <div class="xemu-dialog-content">
+      <div class="xemu-status" role="status">
+        <span class="xemu-status-indicator" aria-hidden="true"></span>
+        <div><strong>PC HOST REQUIRED</strong><span>xemu does not currently run inside this Xbox UWP client.</span></div>
+      </div>
+      <p class="xemu-explanation">The official xemu project currently provides builds for Windows, macOS, and Linux, and lists an OpenGL 4.0-compatible GPU as a requirement. This Retro Player panel is a setup and information tool only: it does not install, launch, or stream xemu games to your Xbox.</p>
+      <section class="xemu-checklist" aria-labelledby="xemu-checklist-title">
+        <div class="xemu-checklist-heading">
+          <div><h3 id="xemu-checklist-title">PC readiness checklist</h3><p>Track the steps for a separate xemu setup.</p></div>
+          <strong id="xemu-check-progress">0 / 5</strong>
+        </div>
+        <label class="xemu-check-row"><input class="focusable" type="checkbox" data-xemu-check="host"><span><strong>Compatible PC available</strong><small>Windows, macOS, or Linux. This is separate from the Xbox console.</small></span></label>
+        <label class="xemu-check-row"><input class="focusable" type="checkbox" data-xemu-check="graphics"><span><strong>Graphics requirement checked</strong><small>The PC has a GPU that supports OpenGL 4.0 or later.</small></span></label>
+        <label class="xemu-check-row"><input class="focusable" type="checkbox" data-xemu-check="installed"><span><strong>xemu installed separately</strong><small>Use the official xemu project download for your computer.</small></span></label>
+        <label class="xemu-check-row"><input class="focusable" type="checkbox" data-xemu-check="system-files"><span><strong>Required console files prepared</strong><small>Use only system files you are authorized to use. Retro Player does not provide BIOS or firmware files.</small></span></label>
+        <label class="xemu-check-row"><input class="focusable" type="checkbox" data-xemu-check="game-image"><span><strong>Compatible game image ready</strong><small>Use a game image you are authorized to use and check its title compatibility.</small></span></label>
+        <p class="xemu-check-note">Your checklist is saved locally in this app. Checking every item does not verify your hardware or enable Xbox playback.</p>
+      </section>
+      <section class="xemu-resources" aria-labelledby="xemu-resources-title">
+        <h3 id="xemu-resources-title">Official xemu resources</h3>
+        <a class="xemu-resource-link focusable" href="https://xemu.app/docs/about/" data-xemu-link>System requirements and project information <span>↗</span></a>
+        <a class="xemu-resource-link focusable" href="https://xemu.app/" data-xemu-link>Game compatibility list <span>↗</span></a>
+        <a class="xemu-resource-link focusable" href="https://github.com/xemu-project/xemu" data-xemu-link>Open-source project and source code <span>↗</span></a>
+      </section>
+      <p class="xemu-license-note">xemu is a separate GPL-2.0-only open-source project. Retro Player does not include or redistribute xemu. Its name and links are provided for informational purposes; the projects are independent.</p>
+    </div>
+    <div class="xemu-dialog-footer"><span>RETRO PLAYER XBOX · XEMU COMPANION</span><button class="secondary-btn focusable" id="xemu-done" type="button">Done</button></div>
   </dialog>
   <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title">
     <div class="settings-header"><div><p class="eyebrow">PERSONALIZE YOUR EXPERIENCE</p><h2 id="settings-title">Settings</h2><p>Make Retro Player feel right on your screen.</p></div><button class="dialog-close focusable" id="settings-close" type="button" aria-label="Close settings">×</button></div>

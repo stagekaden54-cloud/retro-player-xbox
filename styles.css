@@ -120,7 +120,7 @@ body.tv-mode-fallback .app-shell{max-width:1680px;padding-left:4vw;padding-right
 .performance-panel>p{margin:10px 0 0;color:#91a49a;font-size:9px;line-height:1.55}
 @media(max-width:600px){.performance-panel{top:68px;right:8px;width:calc(100vw - 16px)}.emulator-topbar #perf-toggle{padding:8px;font-size:9px}}
 
-/* Original Xbox xemu companion panel. This is a guide, not an emulator runtime. */
+/* Original Xbox xemu-uwp handoff panel. The emulator remains a separate app. */
 .system-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
 .system-symbol.xemu{background:#33271b;color:#f2a23a;font-size:18px;border:1px solid #f2a23a55}
 .xemu-support-card{border-color:#f2a23a35}
@@ -142,18 +142,18 @@ body.tv-mode-fallback .app-shell{max-width:1680px;padding-left:4vw;padding-right
 .xemu-checklist-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
 .xemu-checklist-heading h3,.xemu-resources h3{margin:0 0 4px;font-size:14px}
 .xemu-checklist-heading p{margin:0;color:#8fa397;font-size:10px}
-.xemu-checklist-heading>strong{color:#f2a23a;font:11px 'DM Mono';white-space:nowrap}
-.xemu-check-row{display:flex;align-items:flex-start;gap:12px;padding:12px 3px;border-top:1px solid var(--line);cursor:pointer}
-.xemu-check-row input{width:18px;height:18px;flex:none;margin:1px 0 0;accent-color:#f2a23a}
-.xemu-check-row strong,.xemu-check-row small{display:block}
-.xemu-check-row strong{font-size:11px}
-.xemu-check-row small{margin-top:4px;color:#8fa397;font-size:10px;line-height:1.5}
-.xemu-check-note{margin:12px 0 0;color:#758a7b;font-size:9px;line-height:1.6}
+.xemu-steps{margin:0;padding-left:22px;color:#dce8df;font-size:11px;line-height:1.65}
+.xemu-steps li{padding:7px 0 7px 4px;border-top:1px solid var(--line)}
+.xemu-steps li:first-child{border-top:0}
+.xemu-steps strong{color:#ffc77e}
+.xemu-launch-actions{margin-top:18px}
+.xemu-launch-actions .primary-btn{width:100%;justify-content:center;min-height:48px}
+.xemu-launch-actions>p{margin:9px 2px 0;color:#8fa397;font-size:10px;line-height:1.6}
 .xemu-resources{margin-top:22px}
 .xemu-resource-link{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:#111f18;color:#e8f2e9;text-decoration:none;font-size:11px}
 .xemu-resource-link span{color:#f2a23a;font-size:16px}
 .xemu-resource-link:hover,.xemu-resource-link:focus-visible{border-color:#f2a23a99;outline:2px solid #f2a23a44;outline-offset:2px}
-.xemu-license-note{margin:18px 0 0;color:#73887a;font-size:9px;line-height:1.65}
+.xemu-license-note{margin:18px 0 0;color:#a1b0a5;font-size:10px;line-height:1.65}
 .xemu-dialog-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 34px;border-top:1px solid var(--line);background:#101d18;color:#718779;font:9px 'DM Mono';letter-spacing:.7px}
 .xemu-dialog-footer .secondary-btn{padding:10px 18px}
 @media(max-width:1050px){.system-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}

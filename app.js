@@ -12,7 +12,6 @@
   const search = document.getElementById('game-search');
   const dialog = document.getElementById('game-dialog');
   const xemuDialog = document.getElementById('xemu-dialog');
-  const XEMU_CHECKLIST_KEY = 'rp-xbox-xemu-readiness';
   const fileInput = document.getElementById('game-file-input');
   const personalGrid = document.getElementById('personal-game-grid');
   const recentGrid = document.getElementById('recent-game-grid');
@@ -394,45 +393,23 @@
   });
   dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
 
-  // xemu is an external PC emulator, not a runtime embedded in this Xbox UWP app.
-  const xemuChecks=[...document.querySelectorAll('[data-xemu-check]')];
-  function updateXemuChecklistProgress(){
-    const completed=xemuChecks.filter(input=>input.checked).length;
-    const progress=document.getElementById('xemu-check-progress');
-    if(progress)progress.textContent=completed+' / '+xemuChecks.length;
-  }
-  function loadXemuChecklist(){
-    let completed=[];
-    try{
-      const saved=JSON.parse(localStorage.getItem(XEMU_CHECKLIST_KEY)||'[]');
-      if(Array.isArray(saved))completed=saved.filter(value=>typeof value==='string');
-    }catch(error){completed=[]}
-    xemuChecks.forEach(input=>{input.checked=completed.includes(input.dataset.xemuCheck)});
-    updateXemuChecklistProgress();
-  }
-  function saveXemuChecklist(){
-    const completed=xemuChecks.filter(input=>input.checked).map(input=>input.dataset.xemuCheck);
-    try{localStorage.setItem(XEMU_CHECKLIST_KEY,JSON.stringify(completed))}
-    catch(error){notify('Could not save the xemu checklist on this device.')}
-    updateXemuChecklistProgress();
-  }
-  xemuChecks.forEach(input=>input.addEventListener('change',saveXemuChecklist));
-  document.getElementById('open-xemu-assistant').addEventListener('click',()=>{
-    loadXemuChecklist();
-    xemuDialog.showModal();
-    xemuChecks[0]?.focus();
+  // The native UWP shell picks a USB disc image and launches the separately installed xemu-uwp app.
+  document.getElementById('launch-xemu-game').addEventListener('click',()=>{
+    if(window.RetroPlayerNativeHost&&window.chrome&&window.chrome.webview){
+      xemuDialog.close();
+      window.chrome.webview.postMessage('launch-xemu-game');
+      return;
+    }
+    notify('Launch Original Xbox games from the Retro Player Xbox app on an Xbox in Developer Mode.');
   });
-  function closeXemuAssistant(){if(xemuDialog.open)xemuDialog.close()}
-  document.getElementById('xemu-close').addEventListener('click',closeXemuAssistant);
-  document.getElementById('xemu-done').addEventListener('click',closeXemuAssistant);
-  xemuDialog.addEventListener('click',event=>{if(event.target===xemuDialog)closeXemuAssistant()});
 
   function openXemuResource(rawUrl){
     let url;
     try{url=new URL(rawUrl,window.location.href)}catch(error){notify('That xemu resource link is invalid.');return}
+    const approvedRepositories=['/xemu-project/xemu','/skitzellez/xemu-uwp'];
     const allowed=url.protocol==='https:'&&(
       url.hostname==='xemu.app'||
-      (url.hostname==='github.com'&&(url.pathname==='/xemu-project/xemu'||url.pathname.startsWith('/xemu-project/xemu/')))
+      (url.hostname==='github.com'&&approvedRepositories.some(path=>url.pathname===path||url.pathname.startsWith(path+'/')))
     );
     if(!allowed){notify('This external link is not on the approved xemu resource list.');return}
     if(window.RetroPlayerNativeHost&&window.chrome&&window.chrome.webview){

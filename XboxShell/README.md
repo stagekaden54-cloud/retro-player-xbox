@@ -39,3 +39,10 @@ The signed package is for personal Developer Mode testing only. The certificate 
 - EmulatorJS/WebAssembly/WebGL, audio, file selection, save states, memory use, and sustained performance must be tested on a real console.
 - Controller navigation and gameplay input must be checked with a physical Xbox controller.
 - No ROMs, BIOS files, copyrighted game images, or signing private keys are stored in this repository.
+
+
+## xemu companion
+
+The dashboard includes an Original Xbox information panel linking to xemu's official requirements, compatibility list, and source repository. Its checklist is stored in local browser storage.
+
+This does not bundle xemu, launch a desktop executable, accept Original Xbox game images, or provide PC-to-Xbox streaming. xemu is a separate desktop project; see [../docs/xemu-companion.md](../docs/xemu-companion.md) before considering a deeper integration.

@@ -31,3 +31,10 @@ After those checks pass, replace the generic handoff with a real launch contract
 - the player starts the selected EmulatorJS core and reports ready/error state to the library.
 
 Do not bundle copyrighted ROMs or BIOS files. Keep user-provided game content outside the source repository.
+
+
+## Original Xbox
+
+The dashboard's xemu companion is a setup/readiness guide only. It does not map Original Xbox images to an EmulatorJS core, launch xemu on the Xbox, or stream a PC-hosted xemu session. The official xemu project currently publishes desktop builds for Windows, macOS, and Linux; the Xbox UWP shell cannot treat those desktop builds as an in-process emulator runtime.
+
+See [xemu-companion.md](xemu-companion.md) for details.

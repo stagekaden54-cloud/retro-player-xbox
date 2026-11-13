@@ -128,6 +128,32 @@ namespace RetroPlayerXbox
             if (String.IsNullOrWhiteSpace(message))
                 return;
 
+            const string externalPrefix = "open-external:";
+            if (message.StartsWith(externalPrefix, StringComparison.Ordinal))
+            {
+                var target = message.Substring(externalPrefix.Length);
+                if (!Uri.TryCreate(target, UriKind.Absolute, out var externalUri) ||
+                    externalUri.Scheme != Uri.UriSchemeHttps ||
+                    !IsAllowedExternalUri(externalUri))
+                {
+                    ShellStatus.Text = "Blocked unapproved external link";
+                    return;
+                }
+
+                try
+                {
+                    var launched = await Windows.System.Launcher.LaunchUriAsync(externalUri);
+                    ShellStatus.Text = launched
+                        ? "Opened official xemu resource"
+                        : "No browser is available for this xemu resource";
+                }
+                catch
+                {
+                    ShellStatus.Text = "Could not open the xemu resource";
+                }
+                return;
+            }
+
             const string completedPrefix = "import-complete:";
             const string failedPrefix = "import-failed:";
             string token = message.StartsWith(completedPrefix, StringComparison.Ordinal)
@@ -145,6 +171,20 @@ namespace RetroPlayerXbox
             ShellStatus.Text = completed ? "Game imported · Ready to play" : "Game import did not complete";
             try { await stagedFile.DeleteAsync(); }
             catch { /* A leftover staging copy is harmless; the library copy is already independent. */ }
+        }
+
+        private static bool IsAllowedExternalUri(Uri uri)
+        {
+            if (uri == null)
+                return false;
+
+            if (String.Equals(uri.Host, "xemu.app", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            const string repositoryPath = "/xemu-project/xemu";
+            return String.Equals(uri.Host, "github.com", StringComparison.OrdinalIgnoreCase) &&
+                (String.Equals(uri.AbsolutePath, repositoryPath, StringComparison.OrdinalIgnoreCase) ||
+                 uri.AbsolutePath.StartsWith(repositoryPath + "/", StringComparison.OrdinalIgnoreCase));
         }
 
         private async void ImportGame_Click(object sender, RoutedEventArgs e)

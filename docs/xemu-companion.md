@@ -1,36 +1,47 @@
-# Original Xbox companion: xemu
+# Original Xbox: xemu-uwp integration
 
-## Current feature
+## Selected emulator
 
-Retro Player Xbox includes an informational assistant for the open-source original Xbox emulator [xemu](https://xemu.app/). The assistant:
+Retro Player Xbox uses [skitzellez/xemu-uwp](https://github.com/skitzellez/xemu-uwp), an unofficial UWP port of the open-source xemu Original Xbox emulator for Xbox Series X|S Developer Mode.
 
-- Links to xemu's official system requirements, compatibility information, and source repository.
-- Presents a five-step PC-readiness checklist.
-- Saves checklist selections in this device's local browser storage.
-- Opens only HTTPS links to `xemu.app` and the exact `github.com/xemu-project/xemu` repository through the native shell's external-link handler.
+- [Latest xemu-uwp releases](https://github.com/skitzellez/xemu-uwp/releases/latest)
+- [Xbox UWP setup and compatibility notes](https://github.com/skitzellez/xemu-uwp/blob/uwp/README-UWP.md)
+- [Upstream xemu project](https://xemu.app/)
 
-The assistant is a guide, not a playable emulator integration. It does not install or bundle xemu, accept original Xbox game images, launch xemu on Xbox, pair with a PC, or stream gameplay.
+The emulator is a separate app. Retro Player does not copy xemu source code, build its binaries, or redistribute its AppX package. This keeps the integration boundary separate from Retro Player's All Rights Reserved codebase and the emulator's GPL-2.0 license.
 
-## Why it is not running on Xbox yet
+## How launching works
 
-The [official xemu project](https://xemu.app/docs/about/) documents support for Windows, macOS, and Linux and requires an OpenGL 4.0-compatible GPU. The current Retro Player Xbox native app is a Windows.Xbox UWP AppContainer that hosts a web interface in WebView2. That architecture does not provide a supported direct launch path for xemu's desktop application.
+1. Put an Original Xbox `.iso` or `.xiso` image that you are authorized to use on a USB drive.
+2. Install xemu-uwp separately on the Xbox through Device Portal while the console is in Developer Mode.
+3. In Dev Home, set xemu's app type to **Game**, as its maintainer documents.
+4. Open the Original Xbox panel in Retro Player and choose **Choose Xbox disc and play**.
+5. Retro Player's native UWP picker selects a file under removable storage. The shell checks that the selected path is inside a removable-storage root.
+6. The shell launches xemu through its documented URI format:
 
-A true native Xbox port would be a separate engineering project. It would need an Xbox-compatible build target, graphics and input integration, file/storage handling, and testing on actual Series X|S hardware. No such port is included here.
+```text
+xemu:?disc=<URL-escaped path>&launchOnExit=<URL-escaped URI>
+```
 
-A different future direction would be a PC-hosted xemu companion that streams to the Xbox client. That would require a separately installed PC host, a secure pairing protocol, video/audio transport, controller forwarding, and latency testing. This repository does not implement that streaming bridge.
+The disc path is URL-escaped before it is placed in the query. The return URI is `retroplayerxbox:resume`. Retro Player registers that protocol in `Package.appxmanifest` and handles it in `App.OnActivated`, restoring the library when xemu exits.
 
-## xemu requirements and compatibility
+The game image remains on USB. It is not copied into Retro Player's private app folder or imported into the existing PS1/N64 IndexedDB library. The Retro Player package declares UWP's `removableStorage` capability and the `.iso` / `.xiso` file-type associations required for access; it does not request `broadFileSystemAccess`.
 
-The official xemu documentation lists Windows, macOS, and Linux support and an OpenGL 4.0-compatible GPU requirement. Game compatibility is title-specific and changes as xemu develops. Always check the official compatibility information instead of assuming every game works.
+## Requirements and limitations
 
-xemu requires system files and game images that are not included with the emulator. Retro Player does not provide BIOS, firmware, or copyrighted game content. Only use files you are authorized to use.
+- The Xbox must be in Developer Mode, and xemu-uwp must be installed separately.
+- Use a removable USB drive visible to both packages. The native picker is restricted to `.iso` and `.xiso`.
+- Follow xemu-uwp's release notes for system-file setup, supported image formats, controls, and known game issues.
+- The emulator fork is experimental. Its detailed technical README describes results observed on Series X; Series S performance must be validated on the actual console and per game.
+- Original Xbox images are not yet cataloged in the persistent Retro Player library. This first implementation provides a direct picker-to-emulator handoff.
+- If xemu is not installed or does not register the `xemu:` URI scheme, Retro Player displays an install prompt instead of claiming the game launched.
 
-## Licensing boundary
+## Licensing and distribution boundary
 
-The xemu source repository identifies the project as GPL-2.0-only. Retro Player Xbox currently has a separate All Rights Reserved project license. This integration therefore uses links and explanatory material only; it does not copy xemu source code or redistribute xemu binaries.
+xemu-uwp is an unofficial fork of xemu/QEMU under GPL-2.0. Retro Player only calls its public URI activation contract and links to its project resources. No xemu source, emulator binaries, BIOS files, firmware, or game images are committed or bundled here.
 
-Any future plan to modify, bundle, link, or redistribute xemu components must first receive a license-compliance review and preserve all applicable notices and source obligations. This document is not legal advice.
+Any future plan to copy, modify, link, package, or redistribute xemu components must receive a separate license-compliance review and preserve all applicable notices and source obligations. This document is not legal advice.
 
 ## External-link safety
 
-The web client intercepts the assistant's resource links and sends a narrow message to the native shell. The native shell opens only HTTPS URLs on `xemu.app` or within `github.com/xemu-project/xemu`. It rejects other hosts and non-HTTPS schemes.
+The web client intercepts only its authored resource links. The native shell opens HTTPS resources on `xemu.app` or within the exact GitHub repositories `xemu-project/xemu` and `skitzellez/xemu-uwp`. It rejects other hosts and non-HTTPS schemes.
